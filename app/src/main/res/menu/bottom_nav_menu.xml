@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/postsFragment"
+        android:icon="@drawable/ic_feed_24"
+        android:title="@string/posts" />
+    <item
+        android:id="@+id/eventsFragment"
+        android:icon="@drawable/ic_event_24"
+        android:title="@string/events" />
+    <item
+        android:id="@+id/usersFragment"
+        android:icon="@drawable/ic_users_24"
+        android:title="@string/users" />
+</menu>

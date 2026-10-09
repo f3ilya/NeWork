@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Widget.AppTheme.MenuButton" parent="Widget.Material3.Button.IconButton">
+        <item name="iconTint">?attr/colorControlNormal</item>
+    </style>
+
+    <style name="Widget.AppTheme.LikeButton" parent="Widget.Material3.Button.TextButton.Icon">
+        <item name="iconTint">@color/like_materialbox_tint</item>
+        <item name="android:minWidth">@dimen/ic_button_min_size</item>
+        <item name="android:minHeight">@dimen/ic_button_min_size</item>
+        <item name="backgroundTint">@android:color/transparent</item>
+    </style>
+
+    <style name="Widget.AppTheme.IconButton" parent="Widget.Material3.Button.TextButton.Icon">
+        <item name="iconTint">?attr/colorPrimary</item>
+        <item name="android:minWidth">@dimen/ic_button_min_size</item>
+        <item name="android:minHeight">@dimen/ic_button_min_size</item>
+    </style>
+
+    <style name="CircleImageView">
+        <item name="cornerSize">50%</item>
+    </style>
+
+</resources>

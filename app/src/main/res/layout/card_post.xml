@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/common_spacing"
+    style="?attr/colorSurface"
+    app:cardCornerRadius="@dimen/card_corner_radius" >
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/postContentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/headerContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/common_spacing"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:id="@+id/avatar"
+                android:layout_width="@dimen/post_avatar_size"
+                android:layout_height="@dimen/post_avatar_size"
+
+                android:contentDescription="@string/description_post_author_avatar"
+                app:layout_constraintBottom_toBottomOf="@id/headerContainer"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:srcCompat="@sample/posts.json/data/authorAvatar" />
+
+            <TextView
+                android:id="@+id/author"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/common_spacing"
+                android:layout_marginEnd="@dimen/common_spacing"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toTopOf="@+id/published"
+                app:layout_constraintEnd_toStartOf="@id/menu"
+                app:layout_constraintStart_toEndOf="@id/avatar"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="packed"
+                tools:ignore="VisualLintLocaleText"
+                tools:text="@sample/posts.json/data/author" />
+
+            <TextView
+                android:id="@+id/published"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/common_spacing"
+                android:layout_marginEnd="@dimen/common_spacing"
+                android:textAppearance="?attr/textAppearanceLabelMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                app:layout_constraintBottom_toBottomOf="@id/headerContainer"
+                app:layout_constraintEnd_toStartOf="@id/menu"
+                app:layout_constraintStart_toEndOf="@id/avatar"
+                app:layout_constraintTop_toBottomOf="@id/author"
+                tools:text="@sample/posts.json/data/published" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/menu"
+                style="@style/Widget.AppTheme.MenuButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/description_post_menu"
+                app:icon="@drawable/ic_more_vert_24"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/imageAttachment"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/attachment_height"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/headerContainer"
+            tools:src="@tools:sample/backgrounds/scenic"
+            tools:visibility="gone" />
+
+        <androidx.media3.ui.PlayerView
+            android:id="@+id/videoAttachment"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/attachment_height"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/headerContainer"
+            app:resize_mode="fit"
+            app:use_controller="true"
+            tools:visibility="gone" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/audioAttachment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            style="?attr/materialCardViewFilledStyle"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+            app:cardCornerRadius="@dimen/card_corner_radius"
+            app:cardElevation="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/headerContainer"
+            app:strokeWidth="0dp"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="8dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/audioPlayPause"
+                    style="@style/Widget.Material3.Button.Icon"
+                    android:layout_width="@dimen/ic_button_min_size"
+                    android:layout_height="@dimen/ic_button_min_size"
+                    app:iconGravity="textEnd"
+                    android:checkable="true"
+                    app:icon="@drawable/ic_play_pause_24"
+                    app:iconSize="@dimen/icon_size"
+                    app:iconTint="?attr/colorPrimary"
+                    app:backgroundTint="@android:color/transparent"
+                    tools:checked="false"/>
+
+                <SeekBar
+                    android:id="@+id/audioSeekBar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:progressTint="?attr/colorPrimary"
+                    android:thumbTint="?attr/colorPrimary" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/barrierAttachment"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="bottom"
+            app:constraint_referenced_ids="imageAttachment, videoAttachment, audioAttachment" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/footerContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/common_spacing"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/barrierAttachment">
+
+            <TextView
+                android:id="@+id/content"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:autoLink="web"
+                android:clickable="true"
+                android:focusable="true"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:lineSpacingMultiplier="1.5"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="@sample/posts.json/data/content" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/like"
+                style="@style/Widget.AppTheme.LikeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="true"
+
+                android:layout_marginTop="@dimen/common_spacing"
+                android:contentDescription="@string/description_post_likes"
+                app:icon="@drawable/ic_like_24"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/content"
+                tools:checked="true"
+                tools:text="@sample/posts.json/data/likes" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/share"
+                style="@style/Widget.AppTheme.IconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/common_spacing"
+                android:layout_marginTop="@dimen/common_spacing"
+                android:contentDescription="@string/description_post_share"
+                app:icon="@drawable/ic_share_24"
+                app:layout_constraintStart_toEndOf="@id/like"
+                app:layout_constraintTop_toBottomOf="@id/content" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

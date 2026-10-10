@@ -78,6 +78,9 @@
         android:name="ru.netology.nework.fragment.DetailedPostFragment"
         android:label="@string/post"
         tools:layout="@layout/fragment_detailed_post">
+        <argument
+            android:name="postContent"
+            app:argType="string" />
         <action
             android:id="@+id/action_detailedPostFragment_to_postsFragment"
             app:destination="@id/postsFragment" />

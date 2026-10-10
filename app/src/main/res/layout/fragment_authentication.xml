@@ -16,17 +16,6 @@
         android:gravity="center"
         android:orientation="vertical">
 
-
-        <TextView
-            android:id="@+id/tvTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/common_spacing"
-            android:text="@string/log_in_to_your_account"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="28sp"
-            android:textStyle="bold" />
-
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilLogin"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"

@@ -1,5 +1,6 @@
 package ru.netology.nework.fragment
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.core.view.isVisible
@@ -21,6 +22,7 @@ import ru.netology.nework.adapter.PostsAdapter
 import ru.netology.nework.auth.AppAuth
 import ru.netology.nework.databinding.FragmentPostsBinding
 import ru.netology.nework.dto.Post
+import ru.netology.nework.extensions.shareIntent
 import ru.netology.nework.viewmodel.PostViewModel
 import javax.inject.Inject
 
@@ -47,7 +49,7 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
             }
 
             override fun onShare(post: Post) {
-                TODO("Not yet implemented")
+                requireContext().shareIntent(post.content)
             }
 
             override fun onAudio(post: Post, isPlaying: Boolean) {
@@ -76,6 +78,8 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch{ viewModel.data.collectLatest(adapter::submitData) }
+
+                launch { viewModel.authState.collectLatest { adapter.refresh() } }
 
                 launch {
                     adapter.loadStateFlow.collectLatest { states ->

@@ -48,4 +48,6 @@
     <string name="are_you_sure_you_want_to_get_out">Вы уверены, что хотите выйти?</string>
     <string name="new_event">Новое событие</string>
     <string name="new_post">Новый пост</string>
+    <string name="description_add_post">Добавить пост</string>
+    <string name="chooser_share_post">Поделиться</string>
 </resources>

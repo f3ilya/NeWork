@@ -47,4 +47,6 @@
     <string name="are_you_sure_you_want_to_get_out">Are you sure you want to get out?</string>
     <string name="new_event">New Event</string>
     <string name="new_post">New Post</string>
+    <string name="description_add_post">Add post</string>
+    <string name="chooser_share_post">Share Post</string>
 </resources>

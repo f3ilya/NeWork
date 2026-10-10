@@ -39,6 +39,7 @@ class AuthenticationFragment : Fragment(R.layout.fragment_authentication) {
 
             btnLogin.setOnClickListener {
                 if (validateFields()) {
+                    hideKeyboard()
                     val login = etLogin.text.toString()
                     val pass = etPassword.text.toString()
                     viewModel.authentication(login, pass)
@@ -57,7 +58,6 @@ class AuthenticationFragment : Fragment(R.layout.fragment_authentication) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.authSuccess.collectLatest {
-                    hideKeyboard()
                     val startDestinationId = findNavController().graph.startDestinationId
                     findNavController().popBackStack(startDestinationId, false)
                 }

@@ -56,6 +56,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
             btnCreateAccount.setOnClickListener {
                 if (validateFields()) {
+                    hideKeyboard()
                     val name = etName.text.toString()
                     val login = etLogin.text.toString()
                     val pass = etPassword.text.toString()
@@ -113,7 +114,6 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
                 launch {
                     viewModel.regSuccess.collectLatest {
-                        hideKeyboard()
                         val startDestinationId = findNavController().graph.startDestinationId
                         findNavController().popBackStack(startDestinationId, false)
                     }

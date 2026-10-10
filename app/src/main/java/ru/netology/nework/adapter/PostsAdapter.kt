@@ -89,9 +89,12 @@ class PostViewHolder(
                 }
             }
 
-            like.setOnClickListener { onInteractionListener.onLike(post) }
             share.setOnClickListener { onInteractionListener.onShare(post) }
             content.setOnClickListener { onInteractionListener.onPost(post) }
+            like.setOnClickListener {
+                onInteractionListener.onLike(post)
+                like.isChecked = post.likedByMe
+            }
         }
     }
 }

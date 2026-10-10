@@ -1,6 +1,7 @@
 package ru.netology.nework.extensions
 
 import android.content.Context
+import android.content.Intent
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import ru.netology.nework.R
 
@@ -34,4 +35,16 @@ fun Context.showConfirmationDialog(
             dialog.dismiss()
         } }
         .show()
+}
+
+fun Context.shareIntent(content: String) {
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, content)
+    }
+    val shareIntent = Intent.createChooser(
+        intent,
+        getString(R.string.chooser_share_post)
+    )
+    startActivity(shareIntent)
 }

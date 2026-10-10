@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import ru.netology.nework.auth.AppAuth
+import ru.netology.nework.auth.AuthState
 import ru.netology.nework.dto.Post
 import ru.netology.nework.error.AppError
 import ru.netology.nework.model.PhotoModel
@@ -50,7 +51,7 @@ private val noPhoto = PhotoModel()
 @HiltViewModel
 class PostViewModel @Inject constructor(
     private val repository: PostRepository,
-    private val appAuth: AppAuth
+    appAuth: AppAuth
 ) : ViewModel() {
     private val cached: Flow<PagingData<Post>> = repository.data
         .cachedIn(viewModelScope)
@@ -66,6 +67,7 @@ class PostViewModel @Inject constructor(
         }
         .cachedIn(viewModelScope)
 
+    val authState: StateFlow<AuthState> = appAuth.authStateFlow
     private val _state = MutableStateFlow(AppModelState())
     val state: StateFlow<AppModelState> = _state.asStateFlow()
 

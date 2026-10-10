@@ -86,7 +86,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/headerContainer"
             tools:src="@tools:sample/backgrounds/scenic"
-            tools:visibility="gone" />
+            tools:visibility="visible" />
 
         <androidx.media3.ui.PlayerView
             android:id="@+id/videoAttachment"
@@ -95,7 +95,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/headerContainer"
+            app:layout_constraintTop_toBottomOf="@id/imageAttachment"
             app:resize_mode="fit"
             app:use_controller="true"
             tools:visibility="gone" />
@@ -111,7 +111,7 @@
             app:cardElevation="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/headerContainer"
+            app:layout_constraintTop_toBottomOf="@+id/videoAttachment"
             app:strokeWidth="0dp"
             tools:visibility="visible">
 

@@ -21,14 +21,20 @@ import kotlinx.coroutines.launch
 import ru.netology.nework.R
 import ru.netology.nework.auth.AppAuth
 import ru.netology.nework.databinding.ActivityAppBinding
+import ru.netology.nework.db.AppDb
 import ru.netology.nework.extensions.load
+import ru.netology.nework.extensions.shareIntent
 import ru.netology.nework.extensions.showConfirmationDialog
+import ru.netology.nework.fragment.DetailedPostFragmentArgs
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class AppActivity : AppCompatActivity(R.layout.activity_app) {
     @Inject
     lateinit var auth: AppAuth
+
+    @Inject
+    lateinit var appDb: AppDb
     private val binding by viewBinding(ActivityAppBinding::bind)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -106,7 +112,7 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                 }.show()
             }
 
-            navController.addOnDestinationChangedListener { controller, destination, bundle ->
+            navController.addOnDestinationChangedListener { controller, destination, arguments ->
                 toolbar.menu.clear()
                 toolbar.setOnMenuItemClickListener(null)
                 when (destination.id) {
@@ -118,7 +124,9 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                         toolbar.inflateMenu(R.menu.menu_share)
                         toolbar.setOnMenuItemClickListener { item ->
                             if (item.itemId == R.id.action_share) {
-                                TODO()
+                                val args = arguments?.let { DetailedPostFragmentArgs.fromBundle(it) }
+                                val content = args?.postContent ?: ""
+                                if (content.isNotBlank()) shareIntent(content)
                                 true
                             } else false
                         }

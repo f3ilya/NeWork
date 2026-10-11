@@ -1,6 +1,5 @@
 package ru.netology.nework.fragment
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.core.view.isVisible
@@ -20,9 +19,11 @@ import ru.netology.nework.adapter.PagingLoadStateAdapter
 import ru.netology.nework.adapter.OnInteractionListener
 import ru.netology.nework.adapter.PostsAdapter
 import ru.netology.nework.auth.AppAuth
+import ru.netology.nework.databinding.CardPostBinding
 import ru.netology.nework.databinding.FragmentPostsBinding
 import ru.netology.nework.dto.Post
 import ru.netology.nework.extensions.shareIntent
+import ru.netology.nework.media.MediaPlaybackManager
 import ru.netology.nework.viewmodel.PostViewModel
 import javax.inject.Inject
 
@@ -33,13 +34,23 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
     private val binding by viewBinding(FragmentPostsBinding::bind)
     private val viewModel: PostViewModel by activityViewModels()
     private lateinit var adapter: PostsAdapter
+    private lateinit var playbackManager: MediaPlaybackManager
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setupExoPlayer()
         setupRecyclerView()
         setupListeners()
         observeViewModel()
+    }
+
+    private fun setupExoPlayer() {
+        playbackManager = MediaPlaybackManager(requireContext()) { errorCode ->
+            error(errorCode)
+        }.also { manager ->
+            viewLifecycleOwner.lifecycle.addObserver(manager)
+        }
     }
 
     private fun setupRecyclerView() {
@@ -52,12 +63,22 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
                 requireContext().shareIntent(post.content)
             }
 
-            override fun onAudio(post: Post, isPlaying: Boolean) {
-                TODO("Not yet implemented")
+            override fun onAudio(post: Post, binding: CardPostBinding) {
+                val url = post.attachment?.url ?: return
+                playbackManager.playAudio(
+                    url = url,
+                    seekBar = binding.audioSeekBar,
+                    playButton = binding.audioPlayPause
+                )
             }
 
-            override fun onVideo(post: Post) {
-                TODO("Not yet implemented")
+            override fun onVideo(post: Post, binding: CardPostBinding) {
+                val url = post.attachment?.url ?: return
+                playbackManager.playVideo(
+                    url = url,
+                    playerView = binding.videoAttachment,
+                    placeholder = binding.videoPlaceholder
+                )
             }
 
             override fun onPost(post: Post) {
@@ -116,24 +137,26 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
                     viewModel.state.collectLatest { state ->
                         binding.progress.isVisible = state.loading && adapter.itemCount == 0
 
-                        if (state.error && state.errorMessage != null) {
-                            val messageResId = when (state.errorMessage) {
-                                "error_network" -> R.string.error_network
-                                "error_db" -> R.string.error_db
-                                else -> R.string.error_unknown
-                            }
-
-                            Snackbar.make(
-                                binding.root,
-                                getString(messageResId),
-                                Snackbar.LENGTH_LONG
-                            ).show()
-                        }
+                        if (state.error && state.errorMessage != null) error(state.errorMessage)
 
                         viewModel.resetState()
                     }
                 }
             }
         }
+    }
+
+    private fun error(error: String) {
+        val messageResId = when (error) {
+            "error_network" -> R.string.error_network
+            "error_db" -> R.string.error_db
+            else -> R.string.error_unknown
+        }
+
+        Snackbar.make(
+            binding.root,
+            getString(messageResId),
+            Snackbar.LENGTH_LONG
+        ).show()
     }
 }

@@ -49,4 +49,5 @@
     <string name="new_post">New Post</string>
     <string name="description_add_post">Add post</string>
     <string name="chooser_share_post">Share Post</string>
+    <string name="description_video_placeholder">Video placeholder</string>
 </resources>

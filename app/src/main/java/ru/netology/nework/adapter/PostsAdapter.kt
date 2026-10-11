@@ -18,8 +18,8 @@ import java.time.format.DateTimeFormatter
 interface OnInteractionListener {
     fun onLike(post: Post)
     fun onShare(post: Post)
-    fun onAudio(post: Post, isPlaying: Boolean)
-    fun onVideo(post: Post)
+    fun onAudio(post: Post, binding: CardPostBinding)
+    fun onVideo(post: Post, binding: CardPostBinding)
     fun onPost(post: Post)
 }
 
@@ -68,17 +68,16 @@ class PostViewHolder(
                 }
 
                 AttachmentType.VIDEO -> {
-                    videoAttachment.isVisible = true
-                    videoAttachment.setOnClickListener {
-                        onInteractionListener.onVideo(post)
+                    videoContainer.isVisible = true
+                    videoContainer.setOnClickListener {
+                        onInteractionListener.onVideo(post, binding)
                     }
                 }
 
                 AttachmentType.AUDIO -> {
                     audioAttachment.isVisible = true
-                    audioAttachment.setOnClickListener {
-                        val isPlaying = audioAttachment.isChecked
-                        onInteractionListener.onAudio(post, isPlaying)
+                    audioPlayPause.setOnClickListener {
+                        onInteractionListener.onAudio(post, binding)
                     }
                 }
 

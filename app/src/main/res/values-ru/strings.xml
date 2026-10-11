@@ -50,4 +50,5 @@
     <string name="new_post">Новый пост</string>
     <string name="description_add_post">Добавить пост</string>
     <string name="chooser_share_post">Поделиться</string>
+    <string name="description_video_placeholder">Заставка видео</string>
 </resources>

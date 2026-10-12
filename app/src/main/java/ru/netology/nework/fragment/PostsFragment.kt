@@ -9,14 +9,15 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.LoadState
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import ru.netology.nework.R
-import ru.netology.nework.adapter.PagingLoadStateAdapter
 import ru.netology.nework.adapter.OnInteractionListener
+import ru.netology.nework.adapter.PagingLoadStateAdapter
 import ru.netology.nework.adapter.PostsAdapter
 import ru.netology.nework.auth.AppAuth
 import ru.netology.nework.databinding.CardPostBinding
@@ -31,10 +32,12 @@ import javax.inject.Inject
 class PostsFragment : Fragment(R.layout.fragment_posts) {
     @Inject
     lateinit var auth: AppAuth
+
+    @Inject
+    lateinit var playbackManager: MediaPlaybackManager
     private val binding by viewBinding(FragmentPostsBinding::bind)
     private val viewModel: PostViewModel by activityViewModels()
     private lateinit var adapter: PostsAdapter
-    private lateinit var playbackManager: MediaPlaybackManager
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -46,15 +49,14 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
     }
 
     private fun setupExoPlayer() {
-        playbackManager = MediaPlaybackManager(requireContext()) { errorCode ->
-            error(errorCode)
-        }.also { manager ->
-            viewLifecycleOwner.lifecycle.addObserver(manager)
+        viewLifecycleOwner.lifecycle.addObserver(playbackManager)
+        playbackManager.setOnErrorListener { errorMessage ->
+            error(errorMessage)
         }
     }
 
     private fun setupRecyclerView() {
-        adapter = PostsAdapter(object : OnInteractionListener {
+        adapter = PostsAdapter(playbackManager, object : OnInteractionListener {
             override fun onLike(post: Post) {
                 viewModel.likePost(id = post.id, likeByMe = post.likedByMe)
             }
@@ -64,18 +66,18 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
             }
 
             override fun onAudio(post: Post, binding: CardPostBinding) {
-                val url = post.attachment?.url ?: return
                 playbackManager.playAudio(
-                    url = url,
+                    postId = post.id,
+                    url = post.attachment?.url ?: "",
                     seekBar = binding.audioSeekBar,
                     playButton = binding.audioPlayPause
                 )
             }
 
             override fun onVideo(post: Post, binding: CardPostBinding) {
-                val url = post.attachment?.url ?: return
                 playbackManager.playVideo(
-                    url = url,
+                    postId = post.id,
+                    url = post.attachment?.url ?: "",
                     playerView = binding.videoAttachment,
                     placeholder = binding.videoPlaceholder
                 )
@@ -98,7 +100,7 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch{ viewModel.data.collectLatest(adapter::submitData) }
+                launch { viewModel.data.collectLatest(adapter::submitData) }
 
                 launch { viewModel.authState.collectLatest { adapter.refresh() } }
 
@@ -150,6 +152,8 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
         val messageResId = when (error) {
             "error_network" -> R.string.error_network
             "error_db" -> R.string.error_db
+            "403" -> R.string.authorization_is_required_for_this_action
+            "404" -> R.string.post_not_found
             else -> R.string.error_unknown
         }
 

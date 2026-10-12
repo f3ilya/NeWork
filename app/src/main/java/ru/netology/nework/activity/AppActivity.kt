@@ -42,12 +42,12 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
         enableEdgeToEdge()
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(
-                systemBars.left,
-                systemBars.top,
-                systemBars.right,
-                systemBars.bottom
-            )
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
+            binding.bottomNavigation.setPadding(0, 0, 0, systemBars.bottom)
+            binding.bottomNavigation.post {
+                val menuHeight = binding.bottomNavigation.height
+                binding.navHostFragment.setPadding(0, 0, 0, menuHeight)
+            }
             insets
         }
 
@@ -124,7 +124,8 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                         toolbar.inflateMenu(R.menu.menu_share)
                         toolbar.setOnMenuItemClickListener { item ->
                             if (item.itemId == R.id.action_share) {
-                                val args = arguments?.let { DetailedPostFragmentArgs.fromBundle(it) }
+                                val args =
+                                    arguments?.let { DetailedPostFragmentArgs.fromBundle(it) }
                                 val content = args?.postContent ?: ""
                                 if (content.isNotBlank()) shareIntent(content)
                                 true

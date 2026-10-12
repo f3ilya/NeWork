@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="@dimen/common_spacing"
+    android:paddingStart="@dimen/common_spacing"
+    android:paddingEnd="@dimen/common_spacing"
     tools:context=".fragment.PostsFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout

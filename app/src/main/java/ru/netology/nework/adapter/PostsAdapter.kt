@@ -11,6 +11,7 @@ import ru.netology.nework.databinding.CardPostBinding
 import ru.netology.nework.dto.AttachmentType
 import ru.netology.nework.dto.Post
 import ru.netology.nework.extensions.load
+import ru.netology.nework.media.MediaPlaybackManager
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -24,11 +25,12 @@ interface OnInteractionListener {
 }
 
 class PostsAdapter(
+    private val playbackManager: MediaPlaybackManager,
     private val onInteractionListener: OnInteractionListener
 ) : PagingDataAdapter<Post, PostViewHolder>(PostDiffCallback()) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
         val binding = CardPostBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return PostViewHolder(binding, onInteractionListener)
+        return PostViewHolder(binding, playbackManager, onInteractionListener)
     }
 
     override fun onBindViewHolder(holder: PostViewHolder, position: Int) {
@@ -41,6 +43,7 @@ class PostsAdapter(
 
 class PostViewHolder(
     private val binding: CardPostBinding,
+    private val playbackManager: MediaPlaybackManager,
     private val onInteractionListener: OnInteractionListener
 ) : RecyclerView.ViewHolder(binding.root) {
     fun bind(post: Post) {
@@ -57,18 +60,32 @@ class PostViewHolder(
                 .format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))
             like.isChecked = post.likedByMe
             like.text = post.likeOwnerIds.size.toString()
+
+            imageAttachment.isVisible = false
+            videoContainer.isVisible = false
+            audioAttachment.isVisible = false
+
+            val isThisPlaying = playbackManager.currentPlayingPostId == post.id
+
             when (post.attachment?.type) {
                 AttachmentType.IMAGE -> {
                     if (!post.attachment.url.isEmpty()) {
                         imageAttachment.load(post.attachment.url)
                         imageAttachment.isVisible = true
-                    } else {
-                        imageAttachment.isVisible = false
                     }
                 }
 
                 AttachmentType.VIDEO -> {
                     videoContainer.isVisible = true
+                    if (isThisPlaying) {
+                        playbackManager.rebindVideo(videoAttachment, videoPlaceholder)
+                    } else {
+                        videoPlaceholder.isVisible = true
+                        videoAttachment.isVisible = false
+                        if (videoAttachment.player != null) {
+                            videoAttachment.player = null
+                        }
+                    }
                     videoContainer.setOnClickListener {
                         onInteractionListener.onVideo(post, binding)
                     }
@@ -76,6 +93,14 @@ class PostViewHolder(
 
                 AttachmentType.AUDIO -> {
                     audioAttachment.isVisible = true
+
+                    if (isThisPlaying) {
+                        playbackManager.rebindAudio(audioSeekBar, audioPlayPause)
+                    } else {
+                        audioPlayPause.isChecked = false
+                        audioSeekBar.progress = 0
+                    }
+
                     audioPlayPause.setOnClickListener {
                         onInteractionListener.onAudio(post, binding)
                     }

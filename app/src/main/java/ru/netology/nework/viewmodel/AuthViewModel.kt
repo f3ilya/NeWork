@@ -3,7 +3,6 @@ package ru.netology.nework.viewmodel
 import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -41,7 +40,6 @@ class AuthViewModel @Inject constructor(
                 _state.value = AppModelState()
                 _authSuccess.emit(Unit)
             }.onFailure { exception ->
-                exception.message?.let { Log.d("MyTagViewModel", it) }
                 if (exception is CancellationException) throw exception
 
                 val error = AppError.from(exception)

@@ -14,136 +14,145 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.google.android.material.button.MaterialButton
-import kotlinx.coroutines.Runnable
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.scopes.ActivityScoped
 import ru.netology.nework.error.AppError
+import javax.inject.Inject
 
-class MediaPlaybackManager(
-    context: Context,
-    private val onErrorListener: (String) -> Unit,
+@ActivityScoped
+class MediaPlaybackManager @Inject constructor(
+    @ApplicationContext context: Context
 ) : DefaultLifecycleObserver {
-    private var exoPlayer: ExoPlayer? = null
+    val exoPlayer: ExoPlayer = ExoPlayer.Builder(context).build()
+    var currentPlayingPostId: Long? = null
+        private set
     private var currentSeekBar: SeekBar? = null
     private var currentPlayButton: MaterialButton? = null
-    private var currentUrl: String? = null
     private var currentVideoPlayerView: PlayerView? = null
     private var currentVideoPlaceholder: View? = null
+    private var onErrorListener: ((String) -> Unit)? = null
     private val handler = Handler(Looper.getMainLooper())
     private val updateProgressRunnable = object : Runnable {
         override fun run() {
-            exoPlayer?.let { player ->
-                if (player.isPlaying) {
-                    currentSeekBar?.progress = player.currentPosition.toInt()
-                    handler.postDelayed(this, 200)
-                }
+            if (exoPlayer.isPlaying && currentSeekBar != null) {
+                currentSeekBar?.progress = exoPlayer.currentPosition.toInt()
+                handler.postDelayed(this, 200)
             }
         }
     }
 
     init {
-        exoPlayer = ExoPlayer.Builder(context).build().apply {
-            addListener(object : Player.Listener {
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    if (playbackState == Player.STATE_READY) {
-                        currentSeekBar?.max = duration.toInt()
-                        if (isPlaying) handler.post(updateProgressRunnable)
-                    }
-                }
-
-                override fun onIsPlayingChanged(isPlaying: Boolean) {
-                    if (isPlaying) {
-                        currentPlayButton?.isChecked = true
-                        handler.post(updateProgressRunnable)
-                    } else {
-                        currentPlayButton?.isChecked = false
-                        handler.removeCallbacks(updateProgressRunnable)
-                    }
-                }
-
-                override fun onPlayerError(error: PlaybackException) {
-                    val appError = AppError.from(error.cause ?: error)
-                    onErrorListener(appError.code)
-                    resetPlaybackState()
-                }
-            })
-        }
+        exoPlayer.addListener(object : Player.Listener {
+            override fun onPlaybackStateChanged(state: Int) {
+                if (state == Player.STATE_READY) currentSeekBar?.max = exoPlayer.duration.toInt()
+                if (exoPlayer.isPlaying) handler.post(updateProgressRunnable)
+            }
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                currentPlayButton?.isChecked = isPlaying
+                if (isPlaying) handler.post(updateProgressRunnable) else handler.removeCallbacks(updateProgressRunnable)
+            }
+            override fun onPlayerError(error: PlaybackException) {
+                onErrorListener?.invoke(AppError.from(error.cause ?: error).code)
+                stopAndReset()
+            }
+        })
     }
 
-    fun playAudio(url: String, seekBar: SeekBar, playButton: MaterialButton) {
-        val player = exoPlayer ?: return
+    fun setOnErrorListener(listener: (String) -> Unit) { this.onErrorListener = listener }
 
-        if (currentUrl == url) {
-            if (player.isPlaying) player.pause() else player.play()
+    private fun prepareMedia(postId: Long, url: String, isVideo: Boolean = false) {
+        if (currentPlayingPostId == postId) {
+            if (!isVideo) {
+                if (exoPlayer.playbackState == Player.STATE_ENDED) {
+                    exoPlayer.seekTo(0)
+                    currentSeekBar?.progress = 0
+                }
+                if (exoPlayer.isPlaying) exoPlayer.pause() else exoPlayer.play()
+            }
             return
         }
-
-        resetPlaybackState()
-        player.clearVideoSurface()
-
-        currentUrl = url
-        currentSeekBar = seekBar
-        currentPlayButton = playButton
-
-        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) player.seekTo(progress.toLong())
-            }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-
-        startPlayback(url)
+        stopAndReset()
+        currentPlayingPostId = postId
+        exoPlayer.setMediaItem(MediaItem.fromUri(url))
+        exoPlayer.prepare()
+        exoPlayer.play()
     }
 
-    fun playVideo(url: String, playerView: PlayerView, placeholder: View) {
-        val player = exoPlayer ?: return
+    fun playAudio(postId: Long, url: String, seekBar: SeekBar, playButton: MaterialButton) {
+        val sameTrack = currentPlayingPostId == postId
+        prepareMedia(postId, url)
+        if (sameTrack) return
 
-        if (currentUrl == url && playerView.player == player) return
+        currentSeekBar = seekBar
+        currentPlayButton = playButton
+        exoPlayer.clearVideoSurface()
+        setupSeekBarListener(seekBar)
+    }
 
-        resetPlaybackState()
+    fun rebindAudio(seekBar: SeekBar, playButton: MaterialButton) {
+        currentSeekBar = seekBar
+        currentPlayButton = playButton
+        currentPlayButton?.isChecked = exoPlayer.isPlaying
+        currentSeekBar?.max = exoPlayer.duration.toInt()
+        currentSeekBar?.progress = exoPlayer.currentPosition.toInt()
+        setupSeekBarListener(seekBar)
+        if (exoPlayer.isPlaying) {
+            handler.removeCallbacks(updateProgressRunnable)
+            handler.post(updateProgressRunnable)
+        }
+    }
 
-        currentUrl = url
+    fun playVideo(postId: Long, url: String, playerView: PlayerView, placeholder: View) {
+        val sameVideo = currentPlayingPostId == postId
+        prepareMedia(postId, url, true)
+        if (sameVideo) return
+
+        rebindVideo(playerView, placeholder)
+    }
+
+    fun rebindVideo(playerView: PlayerView, placeholder: View) {
         currentVideoPlayerView = playerView
         currentVideoPlaceholder = placeholder
         placeholder.isVisible = false
         playerView.isVisible = true
-        playerView.player = player
-
-        startPlayback(url)
+        playerView.player = null
+        playerView.player = exoPlayer
     }
 
-    private fun startPlayback(url: String) {
-        exoPlayer?.let { player ->
-            val mediaItem = MediaItem.fromUri(url)
-            player.setMediaItem(mediaItem)
-            player.prepare()
-            player.play()
-        }
+    private fun setupSeekBarListener(seekBar: SeekBar) {
+        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) exoPlayer.seekTo(progress.toLong())
+            }
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {}
+        })
     }
 
-    private fun resetPlaybackState() {
-        currentPlayButton?.isChecked = false
+    fun stopAndReset() {
         handler.removeCallbacks(updateProgressRunnable)
+        currentPlayButton?.isChecked = false
         currentSeekBar?.progress = 0
-        currentVideoPlayerView?.isVisible = false
         currentVideoPlaceholder?.isVisible = true
+        currentVideoPlayerView?.isVisible = false
+        currentVideoPlayerView?.player = null
+        currentPlayingPostId = null
         currentVideoPlaceholder = null
+        currentVideoPlayerView = null
         currentSeekBar = null
         currentPlayButton = null
-        currentVideoPlayerView?.player = null
-        currentVideoPlayerView = null
+        exoPlayer.stop()
+        exoPlayer.clearMediaItems()
+        exoPlayer.clearVideoSurface()
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        exoPlayer?.pause()
+        exoPlayer.pause()
         handler.removeCallbacks(updateProgressRunnable)
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
-        handler.removeCallbacks(updateProgressRunnable)
-        exoPlayer?.release()
-        exoPlayer = null
-        resetPlaybackState()
+        stopAndReset()
+        exoPlayer.release()
     }
 }

@@ -125,7 +125,8 @@
                 android:layout_height="match_parent"
                 android:visibility="gone"
                 app:resize_mode="fit"
-                app:use_controller="true" />
+                app:use_controller="true"
+                app:surface_type="texture_view"/>
 
         </FrameLayout>
 

@@ -50,4 +50,6 @@
     <string name="description_add_post">Add post</string>
     <string name="chooser_share_post">Share Post</string>
     <string name="description_video_placeholder">Video placeholder</string>
+    <string name="authorization_is_required_for_this_action">Authorization is required for this action.</string>
+    <string name="post_not_found">Post not found.</string>
 </resources>

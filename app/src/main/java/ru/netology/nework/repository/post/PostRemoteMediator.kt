@@ -29,23 +29,9 @@ class PostRemoteMediator @Inject constructor(
     ): MediatorResult {
         try {
             val response = when (loadType) {
-                LoadType.REFRESH -> {
-//                    val id = postRemoteKeyDao.getAfterKey()
-//                    if (id == null) {
-//                        apiService.getLatestPosts(state.config.initialLoadSize)
-//                    } else {
-//                        apiService.getAfterPosts(id, state.config.pageSize)
-//                    }
-                    apiService.getLatestPosts(state.config.initialLoadSize)
-                }
+                LoadType.REFRESH -> { apiService.getLatestPosts(state.config.initialLoadSize) }
 
-                LoadType.PREPEND -> {
-//                    val id = postRemoteKeyDao.getAfterKey() ?: return MediatorResult.Success(
-//                        endOfPaginationReached = false
-//                    )
-//                    apiService.getAfterPosts(id, state.config.pageSize)
-                    return MediatorResult.Success(endOfPaginationReached = true)
-                }
+                LoadType.PREPEND -> { return MediatorResult.Success(endOfPaginationReached = true) }
 
                 LoadType.APPEND -> {
                     val id = postRemoteKeyDao.getBeforeKey() ?: return MediatorResult.Success(
@@ -62,8 +48,6 @@ class PostRemoteMediator @Inject constructor(
             appDb.withTransaction {
                 when (loadType) {
                     LoadType.REFRESH -> {
-                        postRemoteKeyDao.removeAll()
-                        postDao.removeAll()
                         postRemoteKeyDao.insert(
                             listOf(
                                 PostRemoteKeyEntity(
@@ -97,5 +81,9 @@ class PostRemoteMediator @Inject constructor(
 
             return MediatorResult.Error(exception)
         }
+    }
+
+    override suspend fun initialize(): InitializeAction {
+        return InitializeAction.SKIP_INITIAL_REFRESH
     }
 }

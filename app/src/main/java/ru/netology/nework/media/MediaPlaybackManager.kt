@@ -1,8 +1,6 @@
 package ru.netology.nework.media
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.widget.SeekBar
 import androidx.core.view.isVisible
@@ -16,8 +14,16 @@ import androidx.media3.ui.PlayerView
 import com.google.android.material.button.MaterialButton
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ActivityScoped
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import ru.netology.nework.error.AppError
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @ActivityScoped
 class MediaPlaybackManager @Inject constructor(
@@ -31,25 +37,18 @@ class MediaPlaybackManager @Inject constructor(
     private var currentVideoPlayerView: PlayerView? = null
     private var currentVideoPlaceholder: View? = null
     private var onErrorListener: ((String) -> Unit)? = null
-    private val handler = Handler(Looper.getMainLooper())
-    private val updateProgressRunnable = object : Runnable {
-        override fun run() {
-            if (exoPlayer.isPlaying && currentSeekBar != null) {
-                currentSeekBar?.progress = exoPlayer.currentPosition.toInt()
-                handler.postDelayed(this, 200)
-            }
-        }
-    }
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private var progressJob: Job? = null
 
     init {
         exoPlayer.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) {
                 if (state == Player.STATE_READY) currentSeekBar?.max = exoPlayer.duration.toInt()
-                if (exoPlayer.isPlaying) handler.post(updateProgressRunnable)
+                progressUpdate(exoPlayer.isPlaying)
             }
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 currentPlayButton?.isChecked = isPlaying
-                if (isPlaying) handler.post(updateProgressRunnable) else handler.removeCallbacks(updateProgressRunnable)
+                progressUpdate(isPlaying)
             }
             override fun onPlayerError(error: PlaybackException) {
                 onErrorListener?.invoke(AppError.from(error.cause ?: error).code)
@@ -58,7 +57,27 @@ class MediaPlaybackManager @Inject constructor(
         })
     }
 
-    fun setOnErrorListener(listener: (String) -> Unit) { this.onErrorListener = listener }
+    private fun progressUpdate(isPlaying: Boolean) {
+        progressJob?.cancel()
+        if (isPlaying) {
+            progressJob = scope.launch {
+                while (isActive) {
+                    currentSeekBar?.progress = exoPlayer.currentPosition.toInt()
+                    delay(200.milliseconds)
+                }
+            }
+        }
+    }
+
+    private fun setupSeekBarListener(seekBar: SeekBar) {
+        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) exoPlayer.seekTo(progress.toLong())
+            }
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {}
+        })
+    }
 
     private fun prepareMedia(postId: Long, url: String, isVideo: Boolean = false) {
         if (currentPlayingPostId == postId) {
@@ -78,6 +97,9 @@ class MediaPlaybackManager @Inject constructor(
         exoPlayer.play()
     }
 
+    fun setOnErrorListener(listener: (String) -> Unit) { this.onErrorListener = listener }
+
+
     fun playAudio(postId: Long, url: String, seekBar: SeekBar, playButton: MaterialButton) {
         val sameTrack = currentPlayingPostId == postId
         prepareMedia(postId, url)
@@ -96,10 +118,7 @@ class MediaPlaybackManager @Inject constructor(
         currentSeekBar?.max = exoPlayer.duration.toInt()
         currentSeekBar?.progress = exoPlayer.currentPosition.toInt()
         setupSeekBarListener(seekBar)
-        if (exoPlayer.isPlaying) {
-            handler.removeCallbacks(updateProgressRunnable)
-            handler.post(updateProgressRunnable)
-        }
+        progressUpdate(exoPlayer.isPlaying)
     }
 
     fun playVideo(postId: Long, url: String, playerView: PlayerView, placeholder: View) {
@@ -119,18 +138,8 @@ class MediaPlaybackManager @Inject constructor(
         playerView.player = exoPlayer
     }
 
-    private fun setupSeekBarListener(seekBar: SeekBar) {
-        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) exoPlayer.seekTo(progress.toLong())
-            }
-            override fun onStartTrackingTouch(sb: SeekBar?) {}
-            override fun onStopTrackingTouch(sb: SeekBar?) {}
-        })
-    }
-
     fun stopAndReset() {
-        handler.removeCallbacks(updateProgressRunnable)
+        progressJob?.cancel()
         currentPlayButton?.isChecked = false
         currentSeekBar?.progress = 0
         currentVideoPlaceholder?.isVisible = true
@@ -148,11 +157,10 @@ class MediaPlaybackManager @Inject constructor(
 
     override fun onStop(owner: LifecycleOwner) {
         exoPlayer.pause()
-        handler.removeCallbacks(updateProgressRunnable)
+        progressJob?.cancel()
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
         stopAndReset()
-        exoPlayer.release()
     }
 }

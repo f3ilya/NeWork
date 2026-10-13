@@ -26,15 +26,17 @@ import ru.netology.nework.extensions.load
 import ru.netology.nework.extensions.shareIntent
 import ru.netology.nework.extensions.showConfirmationDialog
 import ru.netology.nework.fragment.DetailedPostFragmentArgs
+import ru.netology.nework.media.MediaPlaybackManager
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class AppActivity : AppCompatActivity(R.layout.activity_app) {
     @Inject
     lateinit var auth: AppAuth
-
     @Inject
     lateinit var appDb: AppDb
+    @Inject
+    lateinit var playbackManager: MediaPlaybackManager
     private val binding by viewBinding(ActivityAppBinding::bind)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -189,5 +191,10 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                 .start()
 
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        playbackManager.exoPlayer.release()
     }
 }

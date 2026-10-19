@@ -42,6 +42,12 @@ fun LinearLayout.renderAvatarStack(
             )
             strokeColor = ContextCompat.getColorStateList(context, typedValue.resourceId)
             strokeWidth = 2 * density
+            setPadding(
+                density.toInt(),
+                density.toInt(),
+                density.toInt(),
+                density.toInt(),
+            )
             isClickable = true
             isFocusable = true
             setOnClickListener { onAvatarClickListener(model.userId) }

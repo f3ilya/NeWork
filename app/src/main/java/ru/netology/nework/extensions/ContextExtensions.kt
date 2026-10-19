@@ -2,6 +2,12 @@ package ru.netology.nework.extensions
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import androidx.annotation.ColorInt
+import androidx.annotation.DrawableRes
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import ru.netology.nework.R
 
@@ -47,4 +53,20 @@ fun Context.shareIntent(content: String) {
         getString(R.string.chooser_share_post)
     )
     startActivity(shareIntent)
+}
+
+fun Context.getBitmapFromVectorDrawable(
+    @DrawableRes drawableId: Int,
+    @ColorInt tintColor: Int? = null,
+): Bitmap? {
+    val drawable = ContextCompat.getDrawable(this, drawableId) ?: return null
+
+    tintColor?.also(drawable::setTint)
+
+    val bitmap = createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight)
+    val canvas = Canvas(bitmap)
+    drawable.setBounds(0, 0, canvas.width, canvas.height)
+    drawable.draw(canvas)
+
+    return bitmap
 }

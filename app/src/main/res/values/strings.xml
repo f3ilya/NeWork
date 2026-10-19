@@ -54,4 +54,10 @@
     <string name="post_not_found">Post not found.</string>
     <string name="likers">Likers</string>
     <string name="mentioned">Mentioned</string>
+    <string name="geolocation_is_disabled">Geolocation is disabled. Enable it in the app settings.</string>
+    <string name="settings">Settings</string>
+    <string name="access_to_geolocation_is_denied">Access to geolocation is denied.</string>
+    <string name="access_to_geolocation">Access to geolocation</string>
+    <string name="the_permission_is_needed_to">The permission is needed to automatically determine your location and display it on the map.</string>
+    <string name="provide">Provide</string>
 </resources>

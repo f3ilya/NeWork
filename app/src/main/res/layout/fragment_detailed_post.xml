@@ -221,14 +221,14 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/published"
                     tools:text="@sample/posts.json/data/content"
-                    tools:visibility="visible"/>
+                    tools:visibility="visible" />
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/likersContainer"
                     android:layout_width="0dp"
+                    android:layout_height="wrap_content"
                     android:paddingTop="@dimen/common_spacing"
                     android:paddingBottom="@dimen/common_spacing"
-                    android:layout_height="wrap_content"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/content">
 
@@ -355,14 +355,16 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <!--        <com.yandex.mapkit.mapview.MapView-->
-            <!--            android:id="@+id/map"-->
-            <!--            android:layout_width="match_parent"-->
-            <!--            android:layout_height="@dimen/attachment_height"-->
-            <!--            app:layout_constraintStart_toStartOf="parent"-->
-            <!--            app:layout_constraintTop_toBottomOf="@id/footerContainer"-->
-            <!--            android:visibility="gone"-->
-            <!--            tools:visibility="visible"/>-->
+            <com.yandex.mapkit.mapview.MapView
+                android:id="@+id/map"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/attachment_height"
+                android:clickable="false"
+                android:focusable="false"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/footerContainer"
+                tools:visibility="visible" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

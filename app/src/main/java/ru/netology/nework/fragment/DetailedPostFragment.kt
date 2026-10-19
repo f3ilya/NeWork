@@ -20,6 +20,7 @@ import ru.netology.nework.dto.AttachmentType
 import ru.netology.nework.dto.Post
 import ru.netology.nework.extensions.load
 import ru.netology.nework.extensions.renderAvatarStack
+import ru.netology.nework.map.YandexMapManager
 import ru.netology.nework.media.MediaPlaybackManager
 import ru.netology.nework.model.AvatarModel
 import ru.netology.nework.viewmodel.PostViewModel
@@ -37,11 +38,29 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
     @Inject
     lateinit var playbackManager: MediaPlaybackManager
 
+    @Inject
+    lateinit var yandexMapManager: YandexMapManager
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         viewModel.setDetailedPostId(args.postId)
+        setupYandexMap()
+        setupExoPlayer()
         observeViewModel()
+    }
+
+    private fun setupYandexMap() {
+        yandexMapManager.bindMapView(binding.map)
+        viewLifecycleOwner.lifecycle.addObserver(yandexMapManager)
+    }
+
+
+    private fun setupExoPlayer() {
+        viewLifecycleOwner.lifecycle.addObserver(playbackManager)
+        playbackManager.setOnErrorListener { errorMessage ->
+            error(errorMessage)
+        }
     }
 
     private fun observeViewModel() {
@@ -49,7 +68,19 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.detailedPost.collectLatest { post ->
-                        post?.let { bindPost(post) }
+                        post?.let {
+                            bindPost(post)
+                            if (it.coordinates != null && !it.coordinates.lat.isNaN() && !it.coordinates.long.isNaN()) {
+                                binding.map.isVisible = true
+                                yandexMapManager.showPoint(
+                                    it.coordinates.lat,
+                                    it.coordinates.long
+                                )
+                                yandexMapManager.disableAllGestures(binding.map)
+                            } else {
+                                binding.map.isVisible = false
+                            }
+                        }
                     }
                 }
 
@@ -76,7 +107,7 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
             }
             authorName.text = post.author
             authorJob.text = post.authorJob
-            if (post.content.isBlank() || post.content.isEmpty()){
+            if (post.content.isBlank() || post.content.isEmpty()) {
                 content.isVisible = false
             } else {
                 content.isVisible = true

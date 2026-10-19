@@ -55,4 +55,10 @@
     <string name="post_not_found">Пост не найден.</string>
     <string name="likers">Оценившие</string>
     <string name="mentioned">Упоминания</string>
+    <string name="geolocation_is_disabled">Геолокация отключена. Включите её в настройках приложения.</string>
+    <string name="settings">Настройки</string>
+    <string name="access_to_geolocation_is_denied">Доступ к геопозиции отклонен</string>
+    <string name="access_to_geolocation">Доступ к геолокации</string>
+    <string name="the_permission_is_needed_to">Разрешение нужно для того, чтобы автоматически определить ваше местоположение и показать его на карте.</string>
+    <string name="provide">Предоставить</string>
 </resources>

@@ -8,7 +8,7 @@ import ru.netology.nework.dto.Coordinates
 import ru.netology.nework.dto.Post
 import ru.netology.nework.dto.UserPreview
 
-@Entity(tableName = "posts")
+@Entity
 data class PostEntity(
     @PrimaryKey
     val id: Long,

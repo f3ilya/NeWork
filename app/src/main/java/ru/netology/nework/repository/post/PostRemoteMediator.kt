@@ -23,6 +23,8 @@ class PostRemoteMediator @Inject constructor(
     private val postDao: PostDao,
     private val apiService: ApiService,
 ) : RemoteMediator<Int, PostEntity>() {
+    var isManualRefresh: Boolean = false
+
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, PostEntity>
@@ -48,6 +50,11 @@ class PostRemoteMediator @Inject constructor(
             appDb.withTransaction {
                 when (loadType) {
                     LoadType.REFRESH -> {
+                        if (isManualRefresh){
+                            postRemoteKeyDao.removeAll()
+                            postDao.removeAll()
+                            isManualRefresh = false
+                        }
                         postRemoteKeyDao.insert(
                             listOf(
                                 PostRemoteKeyEntity(

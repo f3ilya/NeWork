@@ -37,12 +37,14 @@ jobs:
 
       - name: Rename APK
         run: |
+          SUFFIX="${{ github.event.pull_request.number || github.run_number }}"
           mv app/build/outputs/apk/debug/app-debug.apk \
-             app/build/outputs/apk/debug/NeWork-debug-${{ github.event.pull_request.number }}.apk
+             app/build/outputs/apk/debug/NeWork-debug-${SUFFIX}.apk
+          echo "SUFFIX=${SUFFIX}" >> "$GITHUB_ENV"
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: NeWork-debug-${{ github.event.pull_request.number }}
-          path: app/build/outputs/apk/debug/NeWork-debug-${{ github.event.pull_request.number }}.apk
+          name: NeWork-debug-${{ env.SUFFIX }}
+          path: app/build/outputs/apk/debug/NeWork-debug-${{ env.SUFFIX }}.apk
           retention-days: 14

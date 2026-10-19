@@ -38,6 +38,8 @@ class AppAuth @Inject constructor(
 
     @Synchronized
     fun setAuth(id: Long, token: String, avatar: String?) {
+        avatar?.let { Log.d("MyTagDebugAuth", it) }
+        Log.d("MyTagDebugAuth", id.toString())
         Log.d("MyTagDebugAuth", token)
         _authStateFlow.value = AuthState(id, token, avatar)
         prefs.edit {

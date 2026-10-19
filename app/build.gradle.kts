@@ -15,7 +15,7 @@ android {
 
     defaultConfig {
         applicationId = "ru.netology.nework"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -47,8 +47,6 @@ android {
         }
     }
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true
-
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -71,7 +69,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
-    coreLibraryDesugaring(libs.desugar.jdk.libs)
     implementation(libs.retrofit)
     implementation(libs.logging.interceptor)
     implementation(libs.androidx.room.paging)
@@ -86,4 +83,5 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.swiperefreshlayout)
+    implementation(libs.maps.mobile)
 }

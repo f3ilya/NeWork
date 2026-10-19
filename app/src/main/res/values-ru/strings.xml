@@ -53,4 +53,6 @@
     <string name="description_video_placeholder">Заставка видео</string>
     <string name="authorization_is_required_for_this_action">Для этого действия требуется авторизация.</string>
     <string name="post_not_found">Пост не найден.</string>
+    <string name="likers">Оценившие</string>
+    <string name="mentioned">Упоминания</string>
 </resources>

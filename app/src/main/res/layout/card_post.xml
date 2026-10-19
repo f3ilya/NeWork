@@ -11,7 +11,9 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/postContentContainer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/headerContainer"
@@ -25,7 +27,6 @@
                 android:id="@+id/avatar"
                 android:layout_width="@dimen/post_avatar_size"
                 android:layout_height="@dimen/post_avatar_size"
-
                 android:contentDescription="@string/description_post_author_avatar"
                 app:layout_constraintBottom_toBottomOf="@id/headerContainer"
                 app:layout_constraintStart_toStartOf="parent"
@@ -76,134 +77,141 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/imageAttachment"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/attachment_height"
-            android:scaleType="centerCrop"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/headerContainer"
-            tools:src="@tools:sample/backgrounds/scenic"
-            tools:visibility="visible" />
-
-        <FrameLayout
-            android:id="@+id/videoContainer"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/attachment_height"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/imageAttachment"
-            tools:visibility="visible">
-
-            <LinearLayout
-                android:id="@+id/videoPlaceholder"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="?attr/colorSurfaceContainerHigh"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:visibility="visible">
-
-                <ImageView
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:contentDescription="@string/description_video_placeholder"
-                    android:src="@android:drawable/ic_media_play"
-                    app:tint="?attr/colorPrimary" />
-
-            </LinearLayout>
-
-            <androidx.media3.ui.PlayerView
-                android:id="@+id/videoAttachment"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="gone"
-                app:resize_mode="fit"
-                app:use_controller="true"
-                app:surface_type="texture_view"/>
-
-        </FrameLayout>
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/audioAttachment"
-            style="?attr/materialCardViewFilledStyle"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:id="@+id/attachmentContainer"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
-            app:cardCornerRadius="@dimen/card_corner_radius"
-            app:cardElevation="0dp"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/videoContainer"
-            app:strokeWidth="0dp"
-            tools:visibility="visible">
+            app:layout_constraintTop_toBottomOf="@id/headerContainer">
 
-            <LinearLayout
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imageAttachment"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/attachment_height"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/headerContainer"
+                tools:src="@tools:sample/backgrounds/scenic"
+                tools:visibility="gone" />
+
+            <FrameLayout
+                android:id="@+id/videoContainer"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/attachment_height"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/imageAttachment"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:id="@+id/videoPlaceholder"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="?attr/colorSurfaceContainerHigh"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:visibility="visible">
+
+                    <ImageView
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:contentDescription="@string/description_video_placeholder"
+                        android:src="@android:drawable/ic_media_play"
+                        app:tint="?attr/colorPrimary" />
+
+                </LinearLayout>
+
+                <androidx.media3.ui.PlayerView
+                    android:id="@+id/videoAttachment"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="gone"
+                    app:resize_mode="fit"
+                    app:surface_type="texture_view"
+                    app:use_controller="true" />
+
+            </FrameLayout>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/audioAttachment"
+                style="?attr/materialCardViewFilledStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="8dp">
+                android:visibility="gone"
+                app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+                app:cardCornerRadius="@dimen/card_corner_radius"
+                app:cardElevation="0dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/videoContainer"
+                app:strokeWidth="0dp"
+                tools:visibility="gone">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/audioPlayPause"
-                    style="@style/Widget.Material3.Button.Icon"
-                    android:layout_width="@dimen/ic_button_min_size"
-                    android:layout_height="@dimen/ic_button_min_size"
-                    android:checkable="true"
-                    app:backgroundTint="@android:color/transparent"
-                    app:icon="@drawable/ic_play_pause_24"
-                    app:iconGravity="textEnd"
-                    app:iconSize="@dimen/icon_size"
-                    app:iconTint="?attr/colorPrimary"
-                    tools:checked="false" />
-
-                <SeekBar
-                    android:id="@+id/audioSeekBar"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:progressTint="?attr/colorPrimary"
-                    android:thumbTint="?attr/colorPrimary" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="8dp">
 
-        <androidx.constraintlayout.widget.Barrier
-            android:id="@+id/barrierAttachment"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:barrierDirection="bottom"
-            app:constraint_referenced_ids="imageAttachment, videoContainer, audioAttachment" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/audioPlayPause"
+                        style="@style/Widget.Material3.Button.Icon"
+                        android:layout_width="@dimen/ic_button_min_size"
+                        android:layout_height="@dimen/ic_button_min_size"
+                        android:checkable="true"
+                        app:backgroundTint="@android:color/transparent"
+                        app:icon="@drawable/ic_play_pause_24"
+                        app:iconGravity="textEnd"
+                        app:iconSize="@dimen/icon_size"
+                        app:iconTint="?attr/colorPrimary"
+                        tools:checked="false" />
+
+                    <SeekBar
+                        android:id="@+id/audioSeekBar"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:progressTint="?attr/colorPrimary"
+                        android:thumbTint="?attr/colorPrimary" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/footerContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="@dimen/common_spacing"
+            android:paddingStart="@dimen/common_spacing"
+            android:paddingEnd="@dimen/common_spacing"
+            android:paddingBottom="@dimen/common_spacing"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/barrierAttachment">
+            app:layout_constraintTop_toBottomOf="@id/attachmentContainer">
 
             <TextView
                 android:id="@+id/content"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:autoLink="web"
-                android:clickable="true"
-                android:focusable="true"
+                android:layout_marginTop="@dimen/common_spacing"
                 android:lineSpacingMultiplier="1.5"
                 android:textAppearance="?attr/textAppearanceBodyLarge"
                 android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:text="@sample/posts.json/data/content" />
+                tools:text="@sample/posts.json/data/content"
+                tools:visibility="visible" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/like"
@@ -211,7 +219,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/common_spacing"
-
                 android:checkable="true"
                 android:contentDescription="@string/description_post_likes"
                 app:icon="@drawable/ic_like_24"

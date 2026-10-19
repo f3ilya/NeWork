@@ -12,11 +12,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ru.netology.nework.auth.AppAuth
 import ru.netology.nework.auth.AuthState
@@ -79,6 +85,27 @@ class PostViewModel @Inject constructor(
     private val _photo = MutableStateFlow(PhotoModel())
     val photo: StateFlow<PhotoModel> = _photo.asStateFlow()
 
+    private val currentPostId = MutableStateFlow<Long?>(null)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val detailedPost: StateFlow<Post?> = currentPostId.flatMapLatest { id ->
+        if (id == null) {
+            flowOf(null)
+        } else {
+            repository.getPostById(id)
+                .onStart { _state.value = AppModelState(loading = true) }
+                .onEach { _state.value = AppModelState() }
+                .catch { exception ->
+                    val error = AppError.from(exception)
+                    _state.value = AppModelState(error = true, errorMessage = error.code)
+                }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(0, 0),
+        initialValue = null
+    )
+
     var isInitialLoad = true
 
 //    fun save() {
@@ -103,6 +130,14 @@ class PostViewModel @Inject constructor(
 //            }
 //        }
 //    }
+
+    fun manualRefresh() {
+        repository.setManualRefresh(true)
+    }
+
+    fun setDetailedPostId(id: Long) {
+        currentPostId.value = id
+    }
 
     fun likePost(id: Long, likeByMe: Boolean) {
         viewModelScope.launch {

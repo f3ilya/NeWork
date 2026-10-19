@@ -47,7 +47,11 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
             binding.bottomNavigation.setPadding(0, 0, 0, systemBars.bottom)
             binding.bottomNavigation.post {
-                val menuHeight = binding.bottomNavigation.height
+                val menuHeight = if (binding.bottomNavigation.isVisible) {
+                    binding.bottomNavigation.height
+                } else {
+                    0
+                }
                 binding.navHostFragment.setPadding(0, 0, 0, menuHeight)
             }
             insets
@@ -159,8 +163,6 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                     val isLoggedIn = authState.token != null
                     if (isLoggedIn && binding.toolbarAvatar.isVisible) {
                         binding.toolbarAvatar.load(authState.avatar, true)
-                    } else {
-                        binding.toolbarAvatar.setImageResource(R.drawable.ic_avatar_placeholder_48)
                     }
                 }
             }
@@ -169,14 +171,14 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
 
     private fun hideBottomNavAndAvatar(bottomNav: BottomNavigationView) {
         binding.toolbarAvatar.isVisible = false
-//        if (bottomNav.isVisible) {
-//            bottomNav.animate()
-//                .translationY(bottomNav.height.toFloat())
-//                .alpha(0f)
-//                .setDuration(300)
-//                .withEndAction { bottomNav.isVisible = false }
-//                .start()
-//        }
+        if (bottomNav.isVisible) {
+            bottomNav.animate()
+                .translationY(bottomNav.height.toFloat())
+                .alpha(0f)
+                .setDuration(300)
+                .withEndAction { bottomNav.isVisible = false }
+                .start()
+        }
         bottomNav.isVisible = false
     }
 

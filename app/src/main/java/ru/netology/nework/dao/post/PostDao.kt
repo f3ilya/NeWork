@@ -10,10 +10,13 @@ import ru.netology.nework.entity.post.PostEntity
 
 @Dao
 interface PostDao {
-    @Query("SELECT * FROM posts ORDER BY id DESC")
+    @Query("SELECT * FROM PostEntity ORDER BY id DESC")
     fun getAll(): Flow<List<PostEntity>>
 
-    @Query("SELECT * FROM posts ORDER BY id DESC")
+    @Query("SELECT * FROM PostEntity WHERE id = :id")
+    fun getPostById(id: Long): Flow<PostEntity?>
+
+    @Query("SELECT * FROM PostEntity ORDER BY id DESC")
     fun pagingSource(): PagingSource<Int, PostEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -22,7 +25,7 @@ interface PostDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(postsEntity: List<PostEntity>)
 
-    @Query("DELETE FROM posts")
+    @Query("DELETE FROM PostEntity")
     suspend fun removeAll()
 
 }

@@ -28,7 +28,6 @@ class AuthViewModel @Inject constructor(
     private val _authSuccess = MutableSharedFlow<Unit>()
     val authSuccess: SharedFlow<Unit> = _authSuccess.asSharedFlow()
 
-    @OptIn(UnstableApi::class)
     fun authentication(login: String, pass: String) {
         if (_state.value.loading) return
 

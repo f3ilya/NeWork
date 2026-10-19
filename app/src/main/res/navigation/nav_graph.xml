@@ -79,6 +79,9 @@
         android:label="@string/post"
         tools:layout="@layout/fragment_detailed_post">
         <argument
+            android:name="postId"
+            app:argType="long" />
+        <argument
             android:name="postContent"
             app:argType="string" />
         <action

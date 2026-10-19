@@ -54,7 +54,12 @@ class PostViewHolder(
                 avatar.setImageResource(R.drawable.ic_avatar_placeholder_48)
             }
             author.text = post.author
-            content.text = post.content
+            if (post.content.isBlank() || post.content.isEmpty()){
+                content.isVisible = false
+            } else {
+                content.isVisible = true
+                content.text = post.content
+            }
             published.text = Instant.parse(post.published)
                 .atZone(ZoneId.systemDefault())
                 .format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))
@@ -69,7 +74,7 @@ class PostViewHolder(
 
             when (post.attachment?.type) {
                 AttachmentType.IMAGE -> {
-                    if (!post.attachment.url.isEmpty()) {
+                    if (post.attachment.url.isNotEmpty()) {
                         imageAttachment.load(post.attachment.url)
                         imageAttachment.isVisible = true
                     }
@@ -114,7 +119,7 @@ class PostViewHolder(
             }
 
             share.setOnClickListener { onInteractionListener.onShare(post) }
-            content.setOnClickListener { onInteractionListener.onPost(post) }
+            postContentContainer.setOnClickListener { onInteractionListener.onPost(post) }
             like.setOnClickListener {
                 onInteractionListener.onLike(post)
                 like.isChecked = post.likedByMe

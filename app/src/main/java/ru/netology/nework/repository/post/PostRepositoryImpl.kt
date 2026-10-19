@@ -22,7 +22,7 @@ import javax.inject.Singleton
 class PostRepositoryImpl @Inject constructor(
     private val postDao: PostDao,
     private val apiService: ApiService,
-    mediator: PostRemoteMediator,
+    private val mediator: PostRemoteMediator,
 ) : PostRepository {
     @OptIn(ExperimentalPagingApi::class)
     override val data: Flow<PagingData<Post>> = Pager(
@@ -31,6 +31,10 @@ class PostRepositoryImpl @Inject constructor(
         pagingSourceFactory = postDao::pagingSource,
     ).flow.map { pagingData ->
         pagingData.map(PostEntity::toDto)
+    }
+
+    override fun setManualRefresh(isManual: Boolean) {
+        mediator.isManualRefresh = true
     }
 
     override suspend fun getAll() {
@@ -58,5 +62,9 @@ class PostRepositoryImpl @Inject constructor(
 
             throw AppError.from(exception)
         }
+    }
+
+    override suspend fun getPostById(id: Long): Flow<Post?> = postDao.getPostById(id).map { entity ->
+        entity?.toDto()
     }
 }

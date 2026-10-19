@@ -2,6 +2,7 @@ package ru.netology.nework.extensions
 
 import android.widget.ImageView
 import com.bumptech.glide.Glide
+import com.google.android.material.imageview.ShapeableImageView
 import ru.netology.nework.R
 
 fun ImageView.load(url: String?, circle: Boolean = false) {

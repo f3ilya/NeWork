@@ -22,4 +22,11 @@
         <item name="cornerSize">50%</item>
     </style>
 
+    <style name="Widget.AppTheme.MoreLikesButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="shapeAppearanceOverlay">@style/CircleImageView</item>
+    </style>
+
 </resources>

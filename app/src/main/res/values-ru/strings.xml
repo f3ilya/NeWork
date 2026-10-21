@@ -61,4 +61,12 @@
     <string name="access_to_geolocation">Доступ к геолокации</string>
     <string name="the_permission_is_needed_to">Разрешение нужно для того, чтобы автоматически определить ваше местоположение и показать его на карте.</string>
     <string name="provide">Предоставить</string>
+    <string name="looking_for_a_job">В поиске работы</string>
+    <string name="post_hint">Введите текст поста…</string>
+    <string name="remove_attachment">Удалить вложение</string>
+    <string name="menu_edit">Редактировать</string>
+    <string name="menu_remove">Удалить</string>
+    <string name="incorrect_attachment_format">Неправильный формат вложения.</string>
+    <string name="choose_a_picture">Выберите изображение</string>
+    <string name="authorization_is_required_message">Для выполнения этого действия необходимо войти в аккаунт. Перейти на экран входа?</string>
 </resources>

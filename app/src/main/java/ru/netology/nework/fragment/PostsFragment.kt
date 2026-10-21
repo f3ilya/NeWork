@@ -23,6 +23,7 @@ import ru.netology.nework.adapter.PostsAdapter
 import ru.netology.nework.databinding.CardPostBinding
 import ru.netology.nework.databinding.FragmentPostsBinding
 import ru.netology.nework.dto.Post
+import ru.netology.nework.extensions.authorizationIsRequired
 import ru.netology.nework.extensions.shareIntent
 import ru.netology.nework.media.MediaPlaybackManager
 import ru.netology.nework.viewmodel.PostViewModel
@@ -68,8 +69,8 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
                 playbackManager.playAudio(
                     postId = post.id,
                     url = post.attachment?.url ?: "",
-                    seekBar = binding.audioSeekBar,
-                    playButton = binding.audioPlayPause,
+                    seekBar = binding.attachmentContainer.audioSeekBar,
+                    playButton = binding.attachmentContainer.audioPlayPause,
                 )
             }
 
@@ -77,8 +78,8 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
                 playbackManager.playVideo(
                     postId = post.id,
                     url = post.attachment?.url ?: "",
-                    playerView = binding.videoAttachment,
-                    placeholder = binding.videoPlaceholder,
+                    playerView = binding.attachmentContainer.videoAttachment,
+                    placeholder = binding.attachmentContainer.videoPlaceholder,
                 )
             }
 
@@ -88,6 +89,14 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
                     postContent = post.content,
                 )
                 findNavController().navigate(action)
+            }
+
+            override fun onRemove(post: Post) {
+                viewModel.removePost(post.id)
+            }
+
+            override fun onEdit(post: Post) {
+                TODO("Not yet implemented")
             }
         })
 
@@ -101,6 +110,20 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
             viewModel.manualRefresh()
             adapter.refresh()
             isManualScrollNeeded = true
+        }
+
+        binding.fab.setOnClickListener {
+            if (viewModel.authState.value.token.isNullOrEmpty()) {
+                authorizationIsRequired {
+                    findNavController().navigate(R.id.action_postsFragment_to_authenticationFragment)
+                }
+            } else {
+                findNavController().navigate(R.id.action_postsFragment_to_newPostFragment)
+            }
+        }
+
+        binding.retryButton.setOnClickListener {
+            adapter.retry()
         }
     }
 
@@ -126,7 +149,7 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
                             list.isVisible = !showErrorPlaceholder
 
                             if (showErrorPlaceholder) {
-                                viewModel.handlePagingError(refreshError.error)
+                                viewModel.handleError(refreshError.error)
                             } else if (states.refresh is LoadState.NotLoading && !isListEmpty) {
                                 viewModel.resetState()
                             }

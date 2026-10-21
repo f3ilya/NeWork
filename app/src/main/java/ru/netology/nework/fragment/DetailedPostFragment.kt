@@ -2,12 +2,14 @@ package ru.netology.nework.fragment
 
 import android.os.Bundle
 import android.view.View
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -106,78 +108,84 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
                 authorAvatar.setImageResource(R.drawable.ic_avatar_placeholder_48)
             }
             authorName.text = post.author
-            authorJob.text = post.authorJob
-            if (post.content.isBlank() || post.content.isEmpty()) {
-                content.isVisible = false
-            } else {
-                content.isVisible = true
+            authorJob.text = if (post.authorJob.isNullOrBlank()) {
+                getString(R.string.looking_for_a_job)
+            } else post.authorJob
+            content.isVisible = if (post.content.isNotBlank() || post.content.isNotEmpty()) {
                 content.text = post.content
-            }
+                true
+            } else false
             published.text = Instant.parse(post.published)
                 .atZone(ZoneId.systemDefault())
                 .format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))
             like.isChecked = post.likedByMe
             like.text = post.likeOwnerIds.size.toString()
 
-            imageAttachment.isVisible = false
-            videoContainer.isVisible = false
-            audioAttachment.isVisible = false
+            attachmentContainer.imageAttachment.isVisible = false
+            attachmentContainer.videoContainer.isVisible = false
+            attachmentContainer.audioAttachment.isVisible = false
 
             val isThisPlaying = playbackManager.currentPlayingPostId == post.id
 
             when (post.attachment?.type) {
                 AttachmentType.IMAGE -> {
                     if (post.attachment.url.isNotEmpty()) {
-                        imageAttachment.load(post.attachment.url)
-                        imageAttachment.isVisible = true
+                        attachmentContainer.imageAttachment.load(post.attachment.url)
+                        attachmentContainer.imageAttachment.isVisible = true
                     }
                 }
 
                 AttachmentType.VIDEO -> {
-                    videoContainer.isVisible = true
+                    attachmentContainer.videoContainer.isVisible = true
                     if (isThisPlaying) {
-                        playbackManager.rebindVideo(videoAttachment, videoPlaceholder)
+                        playbackManager.rebindVideo(
+                            attachmentContainer.videoAttachment,
+                            attachmentContainer.videoPlaceholder
+                        )
                     } else {
-                        videoPlaceholder.isVisible = true
-                        videoAttachment.isVisible = false
-                        if (videoAttachment.player != null) {
-                            videoAttachment.player = null
+                        attachmentContainer.videoPlaceholder.isVisible = true
+                        attachmentContainer.videoAttachment.isVisible = false
+                        if (attachmentContainer.videoAttachment.player != null) {
+                            attachmentContainer.videoAttachment.player = null
                         }
                     }
-                    videoContainer.setOnClickListener {
+                    attachmentContainer.videoContainer.setOnClickListener {
                         playbackManager.playVideo(
                             postId = post.id,
                             url = post.attachment.url,
-                            playerView = videoAttachment,
-                            placeholder = videoPlaceholder
+                            playerView = attachmentContainer.videoAttachment,
+                            placeholder = attachmentContainer.videoPlaceholder
                         )
                     }
                 }
 
                 AttachmentType.AUDIO -> {
-                    audioAttachment.isVisible = true
+                    attachmentContainer.audioAttachment.isVisible = true
 
                     if (isThisPlaying) {
-                        playbackManager.rebindAudio(audioSeekBar, audioPlayPause)
+                        playbackManager.rebindAudio(
+                            attachmentContainer.audioSeekBar,
+                            attachmentContainer.audioPlayPause
+                        )
                     } else {
-                        audioPlayPause.isChecked = false
-                        audioSeekBar.progress = 0
+                        attachmentContainer.audioPlayPause.isChecked = false
+                        attachmentContainer.audioSeekBar.progress = 0
                     }
 
-                    audioPlayPause.setOnClickListener {
+                    attachmentContainer.audioPlayPause.setOnClickListener {
                         playbackManager.playAudio(
                             postId = post.id,
                             url = post.attachment.url,
-                            seekBar = audioSeekBar,
-                            playButton = audioPlayPause
+                            seekBar = attachmentContainer.audioSeekBar,
+                            playButton = attachmentContainer.audioPlayPause
                         )
                     }
                 }
 
                 else -> {
-                    audioAttachment.isVisible = false
-                    videoAttachment.isVisible = false
-                    imageAttachment.isVisible = false
+                    attachmentContainer.audioAttachment.isVisible = false
+                    attachmentContainer.videoAttachment.isVisible = false
+                    attachmentContainer.imageAttachment.isVisible = false
                 }
             }
 
@@ -209,17 +217,17 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
             )
 
             if (post.mentionIds.isNotEmpty()) {
-                mentionedContainer.isVisible = true
-                mentionedIcon.text = post.mentionIds.size.toString()
+                mentionedContainer.root.isVisible = true
+                mentionedContainer.mentionedIcon.text = post.mentionIds.size.toString()
                 val mentionModels = post.mentionIds.map { userId ->
                     AvatarModel(
                         userId = userId,
                         avatarUrl = post.users[userId.toString()]?.avatar
                     )
                 }
-                avatarMentionedStack.renderAvatarStack(
+                mentionedContainer.avatarMentionedStack.renderAvatarStack(
                     models = mentionModels,
-                    moreButton = moreMentioned,
+                    moreButton = mentionedContainer.moreMentioned,
                     onAvatarClickListener = { userId ->
 //                    val action = DetailedPostFragmentDirections.actionDetailedPostFragmentToLikeOwnersFragment(post.id)
 //                    findNavController().navigate(action)
@@ -231,7 +239,30 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
                         TODO()
                     }
                 )
-            } else mentionedContainer.isVisible = false
+            } else mentionedContainer.root.isVisible = false
+
+            menu.isVisible = post.ownedByMe
+            menu.setOnClickListener {
+                PopupMenu(it.context, it).apply {
+                    inflate(R.menu.menu_options)
+                    setOnMenuItemClickListener { item ->
+                        when (item.itemId) {
+                            R.id.remove -> {
+                                viewModel.removePost(post.id)
+                                findNavController().navigateUp()
+                                true
+                            }
+
+                            R.id.edit -> {
+                                TODO()
+                                true
+                            }
+
+                            else -> false
+                        }
+                    }
+                }.show()
+            }
         }
     }
 

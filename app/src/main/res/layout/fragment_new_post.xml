@@ -1,6 +1,207 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="?attr/colorSurface"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:paddingBottom="?attr/actionBarSize"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/common_spacing">
+
+            <EditText
+                android:id="@+id/edit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="text"
+                android:background="@android:color/transparent"
+                android:gravity="top|start"
+                android:hint="@string/post_hint"
+                android:inputType="textMultiLine|textCapSentences"
+                android:minHeight="120dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <LinearLayout
+                android:id="@+id/attachment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/common_spacing"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/edit"
+                tools:visibility="visible">
+
+                <include
+                    android:id="@+id/attachmentContainer"
+                    layout="@layout/layout_attachment_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/removeAttachment"
+                    style="@style/Widget.Material3.Button.IconButton.Outlined"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/remove_attachment"
+                    android:textColor="?attr/colorControlNormal"
+                    app:icon="@drawable/ic_close_24"
+                    app:iconTint="?attr/colorControlNormal" />
+
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/mentioned"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/common_spacing"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/attachment"
+                tools:visibility="visible">
+
+                <include
+                    android:id="@+id/mentionedContainer"
+                    layout="@layout/layout_mentioned_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/removeMentioned"
+                    style="@style/Widget.Material3.Button.IconButton.Outlined"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="top|end"
+                    android:gravity="center"
+                    app:icon="@drawable/ic_close_24"
+                    app:iconGravity="textStart"
+                    app:iconTint="?attr/colorControlNormal" />
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/mapContainer"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/attachment_height"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/mentioned"
+                tools:visibility="visible">
+
+                <com.yandex.mapkit.mapview.MapView
+                    android:id="@+id/map"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="false"
+                    android:focusable="false" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/removeMap"
+                    style="@style/Widget.Material3.Button.IconButton.Outlined"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="top|end"
+                    android:gravity="center"
+                    app:icon="@drawable/ic_close_24"
+                    app:iconGravity="textStart"
+                    app:iconTint="?attr/colorControlNormal" />
+
+            </FrameLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.dockedtoolbar.DockedToolbarLayout
+        android:id="@+id/docked_toolbar"
+        style="@style/Widget.Material3.DockedToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:backgroundTint="?attr/colorSurfaceContainer">
+
+        <com.google.android.material.overflow.OverflowLinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minWidth="@dimen/ic_button_min_size"
+                app:layout_overflowIcon="@drawable/ic_photo_camera_24">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnPhoto"
+                    style="?attr/materialIconButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    app:icon="@drawable/ic_photo_camera_24" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minWidth="@dimen/ic_button_min_size"
+                app:layout_overflowIcon="@drawable/ic_attach_file_24">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAttachment"
+                    style="?attr/materialIconButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_attach_file_24" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minWidth="@dimen/ic_button_min_size"
+                app:layout_overflowIcon="@drawable/ic_attach_file_24">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnUsers"
+                    style="?attr/materialIconButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/people_24" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minWidth="@dimen/ic_button_min_size"
+                app:layout_overflowIcon="@drawable/ic_attach_file_24">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnLocation"
+                    style="?attr/materialIconButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_location_24" />
+            </FrameLayout>
+
+        </com.google.android.material.overflow.OverflowLinearLayout>
+
+    </com.google.android.material.dockedtoolbar.DockedToolbarLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

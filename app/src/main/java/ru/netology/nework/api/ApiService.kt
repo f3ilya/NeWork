@@ -7,6 +7,7 @@ import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -17,6 +18,7 @@ import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 import ru.netology.nework.BuildConfig
+import ru.netology.nework.dto.Media
 import ru.netology.nework.dto.Post
 import ru.netology.nework.dto.Token
 
@@ -37,6 +39,10 @@ fun retrofit(client: OkHttpClient): Retrofit = Retrofit.Builder()
     .build()
 
 interface ApiService {
+    @Multipart
+    @POST("media")
+    suspend fun saveMedia(@Part media: MultipartBody.Part): Response<Media>
+
     /** === AUTHENTICATION === **/
 
     @FormUrlEncoded
@@ -65,8 +71,11 @@ interface ApiService {
 
     /** === POSTS === **/
 
-    @GET("posts")
-    suspend fun getAll(): Response<List<Post>>
+    @POST("posts")
+    suspend fun savePost(@Body post: Post): Response<Post>
+
+    @DELETE("posts/{id}")
+    suspend fun removePost(@Path("id") id: Long): Response<Unit>
 
     @GET("posts/{id}/before")
     suspend fun getBeforePosts(

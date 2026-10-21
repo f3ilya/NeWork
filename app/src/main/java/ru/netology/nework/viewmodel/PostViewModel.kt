@@ -1,5 +1,6 @@
 package ru.netology.nework.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -26,12 +27,18 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ru.netology.nework.auth.AppAuth
 import ru.netology.nework.auth.AuthState
+import ru.netology.nework.dto.Attachment
+import ru.netology.nework.dto.AttachmentType
 import ru.netology.nework.dto.Post
 import ru.netology.nework.error.AppError
-import ru.netology.nework.model.PhotoModel
+import ru.netology.nework.error.UnknownError
 import ru.netology.nework.model.AppModelState
+import ru.netology.nework.model.MediaModel
 import ru.netology.nework.repository.post.PostRepository
+import java.io.File
 import javax.inject.Inject
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 private val empty = Post(
     id = 0,
@@ -52,7 +59,7 @@ private val empty = Post(
     ownedByMe = false,
 )
 
-private val noPhoto = PhotoModel()
+private val noMedia = MediaModel()
 
 @HiltViewModel
 class PostViewModel @Inject constructor(
@@ -82,8 +89,8 @@ class PostViewModel @Inject constructor(
     private val _postCreated = MutableSharedFlow<Unit>()
     val postCreated: SharedFlow<Unit> = _postCreated.asSharedFlow()
 
-    private val _photo = MutableStateFlow(PhotoModel())
-    val photo: StateFlow<PhotoModel> = _photo.asStateFlow()
+    private val _media = MutableStateFlow(MediaModel())
+    val media: StateFlow<MediaModel> = _media.asStateFlow()
 
     private val currentPostId = MutableStateFlow<Long?>(null)
 
@@ -94,11 +101,8 @@ class PostViewModel @Inject constructor(
         } else {
             repository.getPostById(id)
                 .onStart { _state.value = AppModelState(loading = true) }
-                .onEach { _state.value = AppModelState() }
-                .catch { exception ->
-                    val error = AppError.from(exception)
-                    _state.value = AppModelState(error = true, errorMessage = error.code)
-                }
+                .onEach { resetState() }
+                .catch { exception -> handleError(exception) }
         }
     }.stateIn(
         scope = viewModelScope,
@@ -108,28 +112,57 @@ class PostViewModel @Inject constructor(
 
     var isInitialLoad = true
 
-//    fun save() {
-//        edited.value.let { post ->
-//            _state.value = PostModelState(loading = true)
-//            viewModelScope.launch {
-//                runCatching<Unit> {
-//                    when (_photo.value) {
-//                        noPhoto -> repository.save(post)
-//                        else -> _photo.value.file?.let { file ->
-//                            repository.saveWithAttachment(post, MediaUplod(file))
-//                        }
-//                    }
-//                    _state.value = PostModelState()
-//                    _postCreated.emit(Unit)
-//                    clearEdited()
-//                }.onFailure { exception ->
-//                    if (exception is CancellationException) throw exception
-//
-//                    _state.value = PostModelState(error = true)
-//                }
-//            }
-//        }
-//    }
+    @OptIn(ExperimentalTime::class)
+    fun save() {
+        edited.value.let { post ->
+            _state.value = AppModelState(loading = true)
+            viewModelScope.launch {
+                runCatching {
+                    val mediaState = _media.value
+                    val timePublished = Clock.System.now().toString()
+                    if (mediaState == noMedia || mediaState.file == null) {
+                        repository.savePost(post.copy(published = timePublished))
+                    } else {
+                        val attachmentType = mediaState.type ?: throw UnknownError()
+                        val media = repository.saveMedia(mediaState.file)
+                        val updatedPost = post.copy(
+                            published = timePublished,
+                            attachment = Attachment(url = media.url, type = attachmentType)
+                        )
+                        repository.savePost(updatedPost)
+                    }
+                }.onSuccess {
+                    resetState()
+                    clearEdited()
+                    _postCreated.emit(Unit)
+                }.onFailure { exception ->
+                    if (exception is CancellationException) throw exception
+
+                    handleError(exception)
+                }
+            }
+        }
+    }
+
+    fun removePost(id: Long) {
+        viewModelScope.launch {
+            runCatching {
+                repository.removePost(id)
+            }.onFailure { exception ->
+                if (exception is CancellationException) throw exception
+
+                handleError(exception)
+            }
+        }
+    }
+
+    fun changeContent(content: String) {
+        edited.value = edited.value.copy(content = content.trim())
+    }
+
+    fun changeMedia(uri: Uri, file: File, type: AttachmentType) {
+        _media.value = MediaModel(uri = uri, file = file, type = type)
+    }
 
     fun manualRefresh() {
         repository.setManualRefresh(true)
@@ -146,18 +179,26 @@ class PostViewModel @Inject constructor(
             }.onFailure { exception ->
                 if (exception is CancellationException) throw exception
 
-                val error = AppError.from(exception)
-                _state.value = AppModelState(error = true, errorMessage = error.code)
+                handleError(exception)
             }
         }
     }
 
-    fun handlePagingError(exception: Throwable) {
+    fun handleError(exception: Throwable) {
         val error = AppError.from(exception)
         _state.value = AppModelState(error = true, errorMessage = error.code)
     }
 
     fun resetState() {
         _state.value = AppModelState()
+    }
+
+    fun clearMedia() {
+        _media.value = noMedia
+    }
+
+    private fun clearEdited() {
+        edited.value = empty
+        _media.value = noMedia
     }
 }

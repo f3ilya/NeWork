@@ -60,4 +60,12 @@
     <string name="access_to_geolocation">Access to geolocation</string>
     <string name="the_permission_is_needed_to">The permission is needed to automatically determine your location and display it on the map.</string>
     <string name="provide">Provide</string>
+    <string name="looking_for_a_job">Looking for a job</string>
+    <string name="post_hint">Enter the post text…</string>
+    <string name="remove_attachment">Remove attachment</string>
+    <string name="menu_edit">Edit</string>
+    <string name="menu_remove">Remove</string>
+    <string name="incorrect_attachment_format">Incorrect attachment format.</string>
+    <string name="choose_a_picture">Choose a picture</string>
+    <string name="authorization_is_required_message">To perform this action, you must log in to your account. Go to the login screen?</string>
 </resources>

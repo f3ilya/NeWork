@@ -57,29 +57,29 @@ class AuthenticationFragment : Fragment(R.layout.fragment_authentication) {
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.authSuccess.collectLatest {
-                    val startDestinationId = findNavController().graph.startDestinationId
-                    findNavController().popBackStack(startDestinationId, false)
+                launch {
+                    viewModel.authSuccess.collectLatest {
+                        val startDestinationId = findNavController().graph.startDestinationId
+                        findNavController().popBackStack(startDestinationId, false)
+                    }
                 }
-            }
-        }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.state.collectLatest { state ->
-                    if (state.error && state.errorMessage != null) {
-                        val messageResId = when (state.errorMessage) {
-                            "error_network" -> R.string.error_network
-                            "400" -> R.string.incorrect_login_or_password
-                            "404" -> R.string.the_user_is_not_registered
-                            else -> R.string.error_unknown
+                launch {
+                    viewModel.state.collectLatest { state ->
+                        if (state.error && state.errorMessage != null) {
+                            val messageResId = when (state.errorMessage) {
+                                "error_network" -> R.string.error_network
+                                "400" -> R.string.incorrect_login_or_password
+                                "404" -> R.string.the_user_is_not_registered
+                                else -> R.string.error_unknown
+                            }
+                            Snackbar.make(
+                                binding.root,
+                                getString(messageResId),
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                            viewModel.resetState()
                         }
-                        Snackbar.make(
-                            binding.root,
-                            getString(messageResId),
-                            Snackbar.LENGTH_LONG
-                        ).show()
-                        viewModel.resetState()
                     }
                 }
             }

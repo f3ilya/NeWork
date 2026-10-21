@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingBottom="@dimen/common_spacing"
+    tools:visibility="visible">
+
+    <TextView
+        android:id="@+id/mentioned"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/mentioned"
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/mentionedIcon"
+        style="@style/Widget.AppTheme.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/common_spacing"
+        android:clickable="false"
+        android:focusable="false"
+        app:icon="@drawable/people_outline_24"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/mentioned"
+        tools:text="@sample/posts.json/data/likes" />
+
+    <LinearLayout
+        android:id="@+id/mentionedAvatarContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/common_spacing"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="@id/mentionedIcon"
+        app:layout_constraintStart_toEndOf="@id/mentionedIcon"
+        app:layout_constraintTop_toTopOf="@id/mentionedIcon">
+
+        <LinearLayout
+            android:id="@+id/avatarMentionedStack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/moreMentioned"
+            style="@style/Widget.AppTheme.MoreLikesButton"
+            android:layout_width="@dimen/post_avatar_size"
+            android:layout_height="@dimen/post_avatar_size"
+            android:layout_marginStart="-8dp"
+            android:visibility="gone"
+            app:icon="@drawable/ic_add_24"
+            app:strokeColor="?attr/colorSurface"
+            app:strokeWidth="2dp"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

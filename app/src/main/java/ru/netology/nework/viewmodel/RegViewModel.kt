@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import ru.netology.nework.error.AppError
 import ru.netology.nework.model.AppModelState
-import ru.netology.nework.model.PhotoModel
+import ru.netology.nework.model.MediaModel
 import ru.netology.nework.repository.auth.AuthRepository
 import java.io.File
 import javax.inject.Inject
@@ -23,7 +23,7 @@ import javax.inject.Inject
 class RegViewModel @Inject constructor(
     private val repository: AuthRepository,
 ) : ViewModel() {
-    private val noPhoto = PhotoModel()
+    private val noPhoto = MediaModel()
 
     private val _state = MutableStateFlow(AppModelState())
     val state: StateFlow<AppModelState> = _state.asStateFlow()
@@ -32,7 +32,7 @@ class RegViewModel @Inject constructor(
     val regSuccess: SharedFlow<Unit> = _regSuccess.asSharedFlow()
 
     private val _photo = MutableStateFlow(noPhoto)
-    val photo: StateFlow<PhotoModel> = _photo.asStateFlow()
+    val photo: StateFlow<MediaModel> = _photo.asStateFlow()
 
     fun registration(login: String, pass: String, name: String) {
         if (_state.value.loading) return
@@ -43,22 +43,19 @@ class RegViewModel @Inject constructor(
                 val file = if (_photo.value == noPhoto) null else _photo.value.file
                 repository.registration(login, pass, name, file)
             }.onSuccess {
-                _state.value = AppModelState()
+                resetState()
                 _regSuccess.emit(Unit)
             }.onFailure { exception ->
                 if (exception is CancellationException) throw exception
 
                 val error = AppError.from(exception)
-                _state.value = AppModelState(
-                    error = true,
-                    errorMessage = error.code
-                )
+                _state.value = AppModelState(error = true, errorMessage = error.code)
             }
         }
     }
 
     fun changePhoto(uri: Uri?, file: File?) {
-        _photo.value = PhotoModel(uri, file)
+        _photo.value = MediaModel(uri, file)
     }
 
     fun clearPhoto() {
@@ -67,5 +64,10 @@ class RegViewModel @Inject constructor(
 
     fun resetState() {
         _state.value = AppModelState()
+    }
+
+    fun handleError(exception: Throwable) {
+        val error = AppError.from(exception)
+        _state.value = AppModelState(error = true, errorMessage = error.code)
     }
 }

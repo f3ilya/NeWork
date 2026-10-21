@@ -35,12 +35,19 @@ jobs:
           chmod +x ./gradlew
           ./gradlew build
 
+      - name: Compute APK name suffix
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            SUFFIX="PR-${{ github.event.pull_request.number }}"
+          else
+            SUFFIX="CI-${{ github.run_number }}"
+          fi
+          echo "SUFFIX=$SUFFIX" >> "$GITHUB_ENV"
+
       - name: Rename APK
         run: |
-          SUFFIX="${{ github.event.pull_request.number || github.run_number }}"
           mv app/build/outputs/apk/debug/app-debug.apk \
              app/build/outputs/apk/debug/NeWork-debug-${SUFFIX}.apk
-          echo "SUFFIX=${SUFFIX}" >> "$GITHUB_ENV"
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4

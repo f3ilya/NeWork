@@ -36,16 +36,13 @@ class AuthViewModel @Inject constructor(
             runCatching {
                 repository.authentication(login, pass)
             }.onSuccess {
-                _state.value = AppModelState()
+                resetState()
                 _authSuccess.emit(Unit)
             }.onFailure { exception ->
                 if (exception is CancellationException) throw exception
 
                 val error = AppError.from(exception)
-                _state.value = AppModelState(
-                    error = true,
-                    errorMessage = error.code
-                )
+                _state.value = AppModelState(error = true, errorMessage = error.code)
             }
         }
     }

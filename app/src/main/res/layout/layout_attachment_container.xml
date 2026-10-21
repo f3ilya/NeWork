@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/imageAttachment"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/attachment_height"
+        android:visibility="gone"
+        tools:src="@tools:sample/backgrounds/scenic"
+        tools:visibility="visible" />
+
+    <FrameLayout
+        android:id="@+id/videoContainer"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/attachment_height"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:visibility="gone"
+        tools:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/videoPlaceholder"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/colorSurfaceContainerHigh"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="visible">
+
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:contentDescription="@string/description_video_placeholder"
+                android:src="@android:drawable/ic_media_play"
+                app:tint="?attr/colorPrimary" />
+        </LinearLayout>
+
+        <androidx.media3.ui.PlayerView
+            android:id="@+id/videoAttachment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            app:resize_mode="fit"
+            app:surface_type="texture_view"
+            app:use_controller="true" />
+    </FrameLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/audioAttachment"
+        style="?attr/materialCardViewFilledStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+        app:cardCornerRadius="@dimen/card_corner_radius"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp"
+        tools:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/audioPlayPause"
+                style="@style/Widget.Material3.Button.Icon"
+                android:layout_width="@dimen/ic_button_min_size"
+                android:layout_height="@dimen/ic_button_min_size"
+                android:checkable="true"
+                app:backgroundTint="@android:color/transparent"
+                app:icon="@drawable/ic_play_pause_24"
+                app:iconGravity="textEnd"
+                app:iconSize="@dimen/icon_size"
+                app:iconTint="?attr/colorPrimary"
+                tools:checked="false" />
+
+            <SeekBar
+                android:id="@+id/audioSeekBar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:progressTint="?attr/colorPrimary"
+                android:thumbTint="?attr/colorPrimary" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>

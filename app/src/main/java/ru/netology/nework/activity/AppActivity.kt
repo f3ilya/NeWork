@@ -27,6 +27,7 @@ import ru.netology.nework.extensions.shareIntent
 import ru.netology.nework.extensions.showConfirmationDialog
 import ru.netology.nework.fragment.DetailedPostFragmentArgs
 import ru.netology.nework.media.MediaPlaybackManager
+import ru.netology.nework.util.OnSaveActionListener
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -144,7 +145,8 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                         toolbar.inflateMenu(R.menu.menu_save)
                         toolbar.setOnMenuItemClickListener { item ->
                             if (item.itemId == R.id.action_save) {
-                                TODO()
+                                val currentFragment = navHostFragment.childFragmentManager.fragments.firstOrNull()
+                                (currentFragment as? OnSaveActionListener)?.onSaveAction()
                                 true
                             } else false
                         }
@@ -160,10 +162,7 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 auth.authStateFlow.collectLatest { authState ->
-                    val isLoggedIn = authState.token != null
-                    if (isLoggedIn && binding.toolbarAvatar.isVisible) {
                         binding.toolbarAvatar.load(authState.avatar, true)
-                    }
                 }
             }
         }

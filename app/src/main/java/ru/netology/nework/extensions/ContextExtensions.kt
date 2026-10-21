@@ -33,8 +33,8 @@ fun Context.showConfirmationDialog(
             onConfirm()
             dialog.dismiss()
         }
-        .setOnCancelListener {
-            onCancel?.invoke()
+        .setOnCancelListener { dialog ->
+            dialog.dismiss()
         }
         .apply { if (isNeed) this.setNeutralButton(neutral) { dialog, _ ->
             onNeutral?.invoke()

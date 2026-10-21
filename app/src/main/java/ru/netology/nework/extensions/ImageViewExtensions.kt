@@ -14,7 +14,7 @@ fun ImageView.load(url: String?, circle: Boolean = false) {
         .load(url)
         .placeholder(R.drawable.ic_loading_48dp)
         .error(R.drawable.ic_error_48dp)
-        .let { if (circle) it.circleCrop() else it}
+        .let { if (circle) it.circleCrop() else it.fitCenter()}
         .timeout(10_000)
         .into(this)
 }

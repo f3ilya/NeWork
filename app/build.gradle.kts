@@ -84,4 +84,5 @@ dependencies {
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.maps.mobile)
+    implementation(libs.ucrop)
 }

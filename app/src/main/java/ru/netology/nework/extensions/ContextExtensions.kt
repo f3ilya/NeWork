@@ -4,12 +4,16 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.net.Uri
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import okio.FileNotFoundException
 import ru.netology.nework.R
+import java.io.File
+import java.io.FileOutputStream
 
 fun Context.showConfirmationDialog(
     title: String,
@@ -69,4 +73,15 @@ fun Context.getBitmapFromVectorDrawable(
     drawable.draw(canvas)
 
     return bitmap
+}
+
+fun Context.uriToFile(uri: Uri): File {
+    val inputStream = contentResolver.openInputStream(uri) ?: throw FileNotFoundException()
+    val tempFile = File(cacheDir, "upload_${System.currentTimeMillis()}.tmp")
+    FileOutputStream(tempFile).use { outputStream ->
+        inputStream.use { inputStream ->
+            inputStream.copyTo(outputStream)
+        }
+    }
+    return tempFile
 }

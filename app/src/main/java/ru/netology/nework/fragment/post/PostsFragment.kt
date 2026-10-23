@@ -1,4 +1,4 @@
-package ru.netology.nework.fragment
+package ru.netology.nework.fragment.post
 
 import android.os.Bundle
 import android.view.View
@@ -26,7 +26,7 @@ import ru.netology.nework.dto.Post
 import ru.netology.nework.extensions.authorizationIsRequired
 import ru.netology.nework.extensions.shareIntent
 import ru.netology.nework.media.MediaPlaybackManager
-import ru.netology.nework.viewmodel.PostViewModel
+import ru.netology.nework.viewmodel.post.PostsViewModel
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -34,7 +34,7 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
     @Inject
     lateinit var playbackManager: MediaPlaybackManager
     private val binding by viewBinding(FragmentPostsBinding::bind)
-    private val viewModel: PostViewModel by activityViewModels()
+    private val viewModel: PostsViewModel by activityViewModels()
     private lateinit var adapter: PostsAdapter
     private var isManualScrollNeeded = false
 
@@ -50,8 +50,8 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
 
     private fun setupExoPlayer() {
         viewLifecycleOwner.lifecycle.addObserver(playbackManager)
-        playbackManager.setOnErrorListener { errorMessage ->
-            error(errorMessage)
+        playbackManager.setOnErrorListener { error ->
+            viewModel.handleError(error)
         }
     }
 
@@ -194,6 +194,9 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
 
     private fun error(error: String) {
         val messageResId = when (error) {
+            "error_playback" -> R.string.error_playback
+            "error_file_too_large" -> R.string.error_file_too_large
+            "error_file_access" -> R.string.error_file_access
             "error_network" -> R.string.error_network
             "error_db" -> R.string.error_db
             "403" -> R.string.authorization_is_required_for_this_action

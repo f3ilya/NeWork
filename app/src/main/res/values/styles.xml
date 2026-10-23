@@ -31,4 +31,9 @@
         <item name="elevation">0dp</item>
     </style>
 
+    <style name="CustomUCropTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:fitsSystemWindows">true</item>
+        <item name="android:statusBarColor">@color/black</item>
+    </style>
+
 </resources>

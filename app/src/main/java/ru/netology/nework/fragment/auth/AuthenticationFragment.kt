@@ -1,4 +1,4 @@
-package ru.netology.nework.fragment
+package ru.netology.nework.fragment.auth
 
 import android.os.Bundle
 import android.view.View
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 import ru.netology.nework.R
 import ru.netology.nework.databinding.FragmentAuthenticationBinding
 import ru.netology.nework.extensions.hideKeyboard
-import ru.netology.nework.viewmodel.AuthViewModel
+import ru.netology.nework.viewmodel.auth.AuthViewModel
 
 @AndroidEntryPoint
 class AuthenticationFragment : Fragment(R.layout.fragment_authentication) {

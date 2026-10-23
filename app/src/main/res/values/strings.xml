@@ -31,7 +31,7 @@
     <string name="passwords_don_t_match">Passwords don\'t match!</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
-    <string name="choose_a_profile_picture">Choose a profile picture</string>
+    <string name="select_a_profile_picture">Select a profile picture</string>
     <string name="description_select_photo">Select Photo</string>
     <string name="description_take_photo">Take photo</string>
     <string name="remove">Remove</string>
@@ -66,6 +66,15 @@
     <string name="menu_edit">Edit</string>
     <string name="menu_remove">Remove</string>
     <string name="incorrect_attachment_format">Incorrect attachment format.</string>
-    <string name="choose_a_picture">Choose a picture</string>
+    <string name="select_a_picture">Select a picture</string>
     <string name="authorization_is_required_message">To perform this action, you must log in to your account. Go to the login screen?</string>
+    <string name="select_a_media">Select a media file</string>
+    <string name="audio">Audio</string>
+    <string name="video">Video</string>
+    <string name="error_file_access">No access to the file.</string>
+    <string name="error_file_too_large">The file is too large. The maximum allowed size is 15 MB.</string>
+    <string name="error_playback">Playback error. Please try again later.</string>
+    <string name="zoom_in">Zoom in</string>
+    <string name="zoom_out">Zoom out</string>
+    <string name="show_my_location">Show my location</string>
 </resources>

@@ -31,7 +31,7 @@
     <string name="ok">ОК</string>
     <string name="cancel">Отмена</string>
     <string name="name_cannot_be_empty">Имя не может быть пустым</string>
-    <string name="choose_a_profile_picture">Выберите фотографию профиля</string>
+    <string name="select_a_profile_picture">Выберите фотографию профиля</string>
     <string name="description_select_photo">Выбрать фото</string>
     <string name="description_take_photo">Сделать фото</string>
     <string name="remove">Удалить</string>
@@ -67,6 +67,15 @@
     <string name="menu_edit">Редактировать</string>
     <string name="menu_remove">Удалить</string>
     <string name="incorrect_attachment_format">Неправильный формат вложения.</string>
-    <string name="choose_a_picture">Выберите изображение</string>
+    <string name="select_a_picture">Выберите изображение</string>
     <string name="authorization_is_required_message">Для выполнения этого действия необходимо войти в аккаунт. Перейти на экран входа?</string>
+    <string name="select_a_media">Выберите медиафайл</string>
+    <string name="audio">Аудио</string>
+    <string name="video">Видео</string>
+    <string name="error_file_access">Нет доступа к файлу.</string>
+    <string name="error_file_too_large">Файл слишком большой. Допустимый размер 15МБ.</string>
+    <string name="error_playback">Ошибка воспроизведения. Пожалуйста, попробуйте позже.</string>
+    <string name="zoom_in">Приблизить</string>
+    <string name="zoom_out">Отдалить</string>
+    <string name="show_my_location">Показать мое местоположение</string>
 </resources>

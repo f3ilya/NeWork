@@ -1,4 +1,4 @@
-package ru.netology.nework.fragment
+package ru.netology.nework.fragment.auth
 
 
 import android.os.Bundle
@@ -21,7 +21,7 @@ import ru.netology.nework.extensions.hideKeyboard
 import ru.netology.nework.extensions.load
 import ru.netology.nework.extensions.registerImagePickerLauncher
 import ru.netology.nework.extensions.showPhotoSelectionDialog
-import ru.netology.nework.viewmodel.RegViewModel
+import ru.netology.nework.viewmodel.auth.RegViewModel
 
 @AndroidEntryPoint
 class RegistrationFragment : Fragment(R.layout.fragment_registration) {
@@ -73,7 +73,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                     launcher = pickPhotoLauncher,
                     isPhotoAttached = false,
                     onRemovePhoto = { viewModel.clearPhoto() },
-                    title = R.string.choose_a_profile_picture
+                    title = R.string.select_a_profile_picture
                 )
             }
         }

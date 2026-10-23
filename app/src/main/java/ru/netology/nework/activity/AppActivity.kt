@@ -25,7 +25,7 @@ import ru.netology.nework.db.AppDb
 import ru.netology.nework.extensions.load
 import ru.netology.nework.extensions.shareIntent
 import ru.netology.nework.extensions.showConfirmationDialog
-import ru.netology.nework.fragment.DetailedPostFragmentArgs
+import ru.netology.nework.fragment.post.DetailedPostFragmentArgs
 import ru.netology.nework.media.MediaPlaybackManager
 import ru.netology.nework.util.OnSaveActionListener
 import javax.inject.Inject
@@ -140,7 +140,7 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                         }
                     }
 
-                    R.id.newPostFragment, R.id.newEventFragment -> {
+                    R.id.newPostFragment, R.id.newEventFragment, R.id.mapFragment -> {
                         hideBottomNavAndAvatar(bottomNavigation)
                         toolbar.inflateMenu(R.menu.menu_save)
                         toolbar.setOnMenuItemClickListener { item ->

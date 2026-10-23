@@ -6,18 +6,21 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.provider.OpenableColumns
 import android.provider.Settings
 import android.view.View
-import androidx.fragment.app.Fragment
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.net.toFile
+import androidx.fragment.app.Fragment
 import com.github.dhaval2404.imagepicker.ImagePicker
 import com.github.dhaval2404.imagepicker.constant.ImageProvider
 import com.google.android.material.snackbar.Snackbar
 import ru.netology.nework.R
+import ru.netology.nework.error.FileAccessError
+import ru.netology.nework.error.LocalAppError
 import java.io.File
 
 fun Fragment.hideKeyboard() {
@@ -27,10 +30,10 @@ fun Fragment.hideKeyboard() {
 }
 
 fun Fragment.registerLocationPermissionLauncher(
-    onGranted: ()  -> Unit,
-) : ActivityResultLauncher<String> {
+    onGranted: () -> Unit,
+): ActivityResultLauncher<String> {
     return registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-        if (isGranted){
+        if (isGranted) {
             onGranted()
         } else {
             if (!shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
@@ -83,19 +86,23 @@ fun Fragment.checkAndRequestLocationPermission(
 }
 
 fun Fragment.registerImagePickerLauncher(
-    onSuccess: (uri: Uri, file: File) -> Unit,
-    onError: (throwable: Throwable) -> Unit,
+    onSuccess: (Uri, File) -> Unit,
+    onError: (Throwable) -> Unit,
 ): ActivityResultLauncher<Intent> {
     return registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         when (result.resultCode) {
-            ImagePicker.RESULT_ERROR -> {
-                val errorMessage = ImagePicker.getError(result.data)
-                onError(Exception(errorMessage))
-            }
+            ImagePicker.RESULT_ERROR -> onError(FileAccessError())
+
             Activity.RESULT_OK -> {
                 val uri: Uri? = result.data?.data
                 val file = uri?.toFile()
-                if (uri != null && file != null) onSuccess(uri, file)
+                if (uri != null && file != null) {
+                    if (isFileTooLarge(uri)){
+                        onError(LocalAppError("error_file_too_large"))
+                    } else {
+                        onSuccess(uri, file)
+                    }
+                }
             }
         }
     }
@@ -105,7 +112,7 @@ fun Fragment.showPhotoSelectionDialog(
     launcher: ActivityResultLauncher<Intent>,
     isPhotoAttached: Boolean = false,
     onRemovePhoto: () -> Unit = {},
-    title: Int = R.string.choose_a_picture
+    title: Int = R.string.select_a_picture
 ) {
     requireContext().showConfirmationDialog(
         title = getString(title),
@@ -116,17 +123,17 @@ fun Fragment.showPhotoSelectionDialog(
         onConfirm = {
             ImagePicker.with(this)
                 .crop()
-                .compress(2048)
+                .compress(5120)
                 .provider(ImageProvider.GALLERY)
                 .galleryMimeTypes(arrayOf("image/png", "image/jpeg"))
-                .createIntent { intent -> launcher.launch(intent) }
+                .createIntent(launcher::launch)
         },
         onCancel = {
             ImagePicker.with(this)
                 .crop()
-                .compress(2048)
+                .compress(5120)
                 .provider(ImageProvider.CAMERA)
-                .createIntent { intent -> launcher.launch(intent) }
+                .createIntent(launcher::launch)
         },
         onNeutral = {
             onRemovePhoto()
@@ -142,5 +149,52 @@ fun Fragment.authorizationIsRequired(
         message = getString(R.string.authorization_is_required_message),
         onConfirm = onNavigate,
         positive = getString(R.string.log_in)
+    )
+}
+
+fun Fragment.isFileTooLarge(uri: Uri, maxSizeBytes: Long = 15 * 1024 * 1024): Boolean {
+    var fileSize = 0L
+
+    requireContext().contentResolver.query(uri, null, null, null)?.use { cursor ->
+        val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+        if (sizeIndex != -1 && cursor.moveToFirst()) {
+            fileSize = cursor.getLong(sizeIndex)
+        }
+    }
+    return fileSize > maxSizeBytes
+}
+
+fun Fragment.registerMediaFilePickerLauncher(
+    onSuccess: (Uri) -> Unit,
+    onError: (Throwable) -> Unit,
+): ActivityResultLauncher<String> {
+    return registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri == null) return@registerForActivityResult
+
+        if (isFileTooLarge(uri)) {
+            onError(LocalAppError("error_file_too_large"))
+        } else {
+            onSuccess(uri)
+        }
+    }
+}
+
+fun Fragment.showMediaSelectionDialog(
+    launcher: ActivityResultLauncher<String>,
+    onAudio: () -> Unit,
+    onVideo: () -> Unit,
+) {
+    requireContext().showConfirmationDialog(
+        title = getString(R.string.select_a_media),
+        positive = getString(R.string.audio),
+        negative = getString(R.string.video),
+        onConfirm = {
+            onAudio()
+            launcher.launch("audio/*")
+        },
+        onCancel = {
+            onVideo()
+            launcher.launch("video/*")
+        },
     )
 }

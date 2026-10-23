@@ -1,4 +1,4 @@
-package ru.netology.nework.fragment
+package ru.netology.nework.fragment.post
 
 import android.os.Bundle
 import android.view.View
@@ -25,7 +25,7 @@ import ru.netology.nework.extensions.renderAvatarStack
 import ru.netology.nework.map.YandexMapManager
 import ru.netology.nework.media.MediaPlaybackManager
 import ru.netology.nework.model.AvatarModel
-import ru.netology.nework.viewmodel.PostViewModel
+import ru.netology.nework.viewmodel.post.DetailedPostViewModel
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -34,7 +34,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
     private val binding by viewBinding(FragmentDetailedPostBinding::bind)
-    private val viewModel: PostViewModel by activityViewModels()
+    private val viewModel: DetailedPostViewModel by activityViewModels()
     private val args: DetailedPostFragmentArgs by navArgs()
 
     @Inject
@@ -57,11 +57,10 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
         viewLifecycleOwner.lifecycle.addObserver(yandexMapManager)
     }
 
-
     private fun setupExoPlayer() {
         viewLifecycleOwner.lifecycle.addObserver(playbackManager)
-        playbackManager.setOnErrorListener { errorMessage ->
-            error(errorMessage)
+        playbackManager.setOnErrorListener { error ->
+            viewModel.handleError(error)
         }
     }
 
@@ -78,7 +77,7 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
                                     it.coordinates.lat,
                                     it.coordinates.long
                                 )
-                                yandexMapManager.disableAllGestures(binding.map)
+                                yandexMapManager.disableAllGestures()
                             } else {
                                 binding.map.isVisible = false
                             }
@@ -268,6 +267,9 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
 
     private fun error(error: String) {
         val messageResId = when (error) {
+            "error_playback" -> R.string.error_playback
+            "error_file_too_large" -> R.string.error_file_too_large
+            "error_file_access" -> R.string.error_file_access
             "error_network" -> R.string.error_network
             "error_db" -> R.string.error_db
             "403" -> R.string.authorization_is_required_for_this_action

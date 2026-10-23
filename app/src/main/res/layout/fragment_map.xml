@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".fragment.map.MapFragment">
+
+    <com.yandex.mapkit.mapview.MapView
+        android:id="@+id/map"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btnShowMyLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_location_24"
+        android:layout_marginEnd="@dimen/common_spacing"
+        android:layout_marginBottom="32dp"
+        android:contentDescription="@string/show_my_location"
+        app:icon="@android:drawable/ic_menu_sort_by_size"
+        android:layout_gravity="bottom|end" />
+
+    <LinearLayout
+        android:id="@+id/zoomContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/common_spacing"
+        android:orientation="vertical"
+        android:background="@android:color/transparent"
+        android:layout_gravity="center|end">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnZoomIn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/zoom_in"
+            android:outlineProvider="none"
+            android:src="@android:drawable/ic_input_add"
+            app:fabSize="mini" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnZoomOut"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:outlineProvider="none"
+            android:contentDescription="@string/zoom_out"
+            android:src="@drawable/ic_minus_24"
+            app:fabSize="mini" />
+    </LinearLayout>
+
+</FrameLayout>

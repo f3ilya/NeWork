@@ -9,7 +9,7 @@
 
     <fragment
         android:id="@+id/postsFragment"
-        android:name="ru.netology.nework.fragment.PostsFragment"
+        android:name="ru.netology.nework.fragment.post.PostsFragment"
         android:label="@string/app_name"
         tools:layout="@layout/fragment_posts">
         <action
@@ -28,7 +28,7 @@
 
     <fragment
         android:id="@+id/eventsFragment"
-        android:name="ru.netology.nework.fragment.EventsFragment"
+        android:name="ru.netology.nework.fragment.event.EventsFragment"
         android:label="@string/app_name"
         tools:layout="@layout/fragment_events">
         <action
@@ -47,7 +47,7 @@
 
     <fragment
         android:id="@+id/usersFragment"
-        android:name="ru.netology.nework.fragment.UsersFragment"
+        android:name="ru.netology.nework.fragment.user.UsersFragment"
         android:label="@string/app_name"
         tools:layout="@layout/fragment_users">
         <action
@@ -65,7 +65,7 @@
 
     <fragment
         android:id="@+id/detailedEventFragment"
-        android:name="ru.netology.nework.fragment.DetailedEventFragment"
+        android:name="ru.netology.nework.fragment.event.DetailedEventFragment"
         android:label="@string/event"
         tools:layout="@layout/fragment_detailed_event">
         <action
@@ -75,7 +75,7 @@
 
     <fragment
         android:id="@+id/detailedPostFragment"
-        android:name="ru.netology.nework.fragment.DetailedPostFragment"
+        android:name="ru.netology.nework.fragment.post.DetailedPostFragment"
         android:label="@string/post"
         tools:layout="@layout/fragment_detailed_post">
         <argument
@@ -91,7 +91,7 @@
 
     <fragment
         android:id="@+id/detailedUserFragment"
-        android:name="ru.netology.nework.fragment.DetailedUserFragment"
+        android:name="ru.netology.nework.fragment.user.DetailedUserFragment"
         android:label="{userName}"
         tools:layout="@layout/fragment_detailed_user">
         <argument
@@ -106,7 +106,7 @@
 
     <fragment
         android:id="@+id/authenticationFragment"
-        android:name="ru.netology.nework.fragment.AuthenticationFragment"
+        android:name="ru.netology.nework.fragment.auth.AuthenticationFragment"
         android:label="@string/login"
         tools:layout="@layout/fragment_authentication">
         <action
@@ -116,7 +116,7 @@
 
     <fragment
         android:id="@+id/registrationFragment"
-        android:name="ru.netology.nework.fragment.RegistrationFragment"
+        android:name="ru.netology.nework.fragment.auth.RegistrationFragment"
         android:label="@string/registration"
         tools:layout="@layout/fragment_registration">
         <action
@@ -128,22 +128,43 @@
 
     <fragment
         android:id="@+id/newEventFragment"
-        android:name="ru.netology.nework.fragment.NewEventFragment"
+        android:name="ru.netology.nework.fragment.event.NewEventFragment"
         android:label="@string/new_event"
         tools:layout="@layout/fragment_new_event">
         <action
             android:id="@+id/action_newEventFragment_to_eventsFragment"
             app:destination="@id/eventsFragment" />
+        <action
+            android:id="@+id/action_newEventFragment_to_mapFragment"
+            app:destination="@id/mapFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/newPostFragment"
-        android:name="ru.netology.nework.fragment.NewPostFragment"
+        android:name="ru.netology.nework.fragment.post.NewPostFragment"
         android:label="@string/new_post"
         tools:layout="@layout/fragment_new_post">
         <action
             android:id="@+id/action_newPostFragment_to_postsFragment"
             app:destination="@id/postsFragment" />
+        <action
+            android:id="@+id/action_newPostFragment_to_mapFragment"
+            app:destination="@id/mapFragment" />
+    </fragment>
+
+    <!-- Экран создания метки на карте -->
+
+    <fragment
+        android:id="@+id/mapFragment"
+        android:name="ru.netology.nework.fragment.map.MapFragment"
+        android:label="fragment_map"
+        tools:layout="@layout/fragment_map" >
+        <action
+            android:id="@+id/action_mapFragment_to_newPostFragment"
+            app:destination="@id/newPostFragment" />
+        <action
+            android:id="@+id/action_mapFragment_to_newEventFragment"
+            app:destination="@id/newEventFragment" />
     </fragment>
 
 </navigation>

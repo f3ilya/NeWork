@@ -21,7 +21,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import ru.netology.nework.error.AppError
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -36,7 +35,7 @@ class MediaPlaybackManager @Inject constructor(
     private var currentPlayButton: MaterialButton? = null
     private var currentVideoPlayerView: PlayerView? = null
     private var currentVideoPlaceholder: View? = null
-    private var onErrorListener: ((String) -> Unit)? = null
+    private var onErrorListener: ((Throwable) -> Unit)? = null
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var progressJob: Job? = null
 
@@ -51,7 +50,7 @@ class MediaPlaybackManager @Inject constructor(
                 progressUpdate(isPlaying)
             }
             override fun onPlayerError(error: PlaybackException) {
-                onErrorListener?.invoke(AppError.from(error.cause ?: error).code)
+                onErrorListener?.invoke(error)
                 stopAndReset()
             }
         })
@@ -97,7 +96,7 @@ class MediaPlaybackManager @Inject constructor(
         exoPlayer.play()
     }
 
-    fun setOnErrorListener(listener: (String) -> Unit) { this.onErrorListener = listener }
+    fun setOnErrorListener(listener: (Throwable) -> Unit) { this.onErrorListener = listener }
 
 
     fun playAudio(postId: Long, url: String, seekBar: SeekBar, playButton: MaterialButton) {

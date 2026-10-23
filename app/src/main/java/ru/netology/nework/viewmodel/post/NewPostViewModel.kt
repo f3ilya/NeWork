@@ -1,38 +1,25 @@
-package ru.netology.nework.viewmodel
+package ru.netology.nework.viewmodel.post
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
-import androidx.paging.map
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import ru.netology.nework.auth.AppAuth
-import ru.netology.nework.auth.AuthState
 import ru.netology.nework.dto.Attachment
 import ru.netology.nework.dto.AttachmentType
+import ru.netology.nework.dto.Coordinates
 import ru.netology.nework.dto.Post
 import ru.netology.nework.error.AppError
 import ru.netology.nework.error.UnknownError
 import ru.netology.nework.model.AppModelState
+import ru.netology.nework.model.MapModel
 import ru.netology.nework.model.MediaModel
 import ru.netology.nework.repository.post.PostRepository
 import java.io.File
@@ -60,27 +47,12 @@ private val empty = Post(
 )
 
 private val noMedia = MediaModel()
+private val noMap = MapModel()
 
 @HiltViewModel
-class PostViewModel @Inject constructor(
+class NewPostViewModel @Inject constructor(
     private val repository: PostRepository,
-    appAuth: AppAuth
 ) : ViewModel() {
-    private val cached: Flow<PagingData<Post>> = repository.data
-        .cachedIn(viewModelScope)
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val data: Flow<PagingData<Post>> = appAuth.authStateFlow
-        .flatMapLatest { (myId) ->
-            cached.map { pagingData ->
-                pagingData.map { post ->
-                    post.copy(ownedByMe = post.authorId == myId)
-                }
-            }
-        }
-        .cachedIn(viewModelScope)
-
-    val authState: StateFlow<AuthState> = appAuth.authStateFlow
     private val _state = MutableStateFlow(AppModelState())
     val state: StateFlow<AppModelState> = _state.asStateFlow()
 
@@ -92,25 +64,8 @@ class PostViewModel @Inject constructor(
     private val _media = MutableStateFlow(MediaModel())
     val media: StateFlow<MediaModel> = _media.asStateFlow()
 
-    private val currentPostId = MutableStateFlow<Long?>(null)
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val detailedPost: StateFlow<Post?> = currentPostId.flatMapLatest { id ->
-        if (id == null) {
-            flowOf(null)
-        } else {
-            repository.getPostById(id)
-                .onStart { _state.value = AppModelState(loading = true) }
-                .onEach { resetState() }
-                .catch { exception -> handleError(exception) }
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(0, 0),
-        initialValue = null
-    )
-
-    var isInitialLoad = true
+    private val _map = MutableStateFlow(MapModel())
+    val map: StateFlow<MapModel> = _map.asStateFlow()
 
     @OptIn(ExperimentalTime::class)
     fun save() {
@@ -119,14 +74,24 @@ class PostViewModel @Inject constructor(
             viewModelScope.launch {
                 runCatching {
                     val mediaState = _media.value
+                    val mapState = _map.value
+                    val coordinates = if (mapState.lat != null && mapState.long != null) {
+                        Coordinates(mapState.lat, mapState.long)
+                    } else null
                     val timePublished = Clock.System.now().toString()
                     if (mediaState == noMedia || mediaState.file == null) {
-                        repository.savePost(post.copy(published = timePublished))
+                        repository.savePost(
+                            post.copy(
+                                published = timePublished,
+                                coordinates = coordinates
+                            )
+                        )
                     } else {
                         val attachmentType = mediaState.type ?: throw UnknownError()
                         val media = repository.saveMedia(mediaState.file)
                         val updatedPost = post.copy(
                             published = timePublished,
+                            coordinates = coordinates,
                             attachment = Attachment(url = media.url, type = attachmentType)
                         )
                         repository.savePost(updatedPost)
@@ -144,18 +109,6 @@ class PostViewModel @Inject constructor(
         }
     }
 
-    fun removePost(id: Long) {
-        viewModelScope.launch {
-            runCatching {
-                repository.removePost(id)
-            }.onFailure { exception ->
-                if (exception is CancellationException) throw exception
-
-                handleError(exception)
-            }
-        }
-    }
-
     fun changeContent(content: String) {
         edited.value = edited.value.copy(content = content.trim())
     }
@@ -164,29 +117,8 @@ class PostViewModel @Inject constructor(
         _media.value = MediaModel(uri = uri, file = file, type = type)
     }
 
-    fun manualRefresh() {
-        repository.setManualRefresh(true)
-    }
-
-    fun setDetailedPostId(id: Long) {
-        currentPostId.value = id
-    }
-
-    fun likePost(id: Long, likeByMe: Boolean) {
-        viewModelScope.launch {
-            runCatching {
-                repository.likePost(id, likeByMe)
-            }.onFailure { exception ->
-                if (exception is CancellationException) throw exception
-
-                handleError(exception)
-            }
-        }
-    }
-
-    fun handleError(exception: Throwable) {
-        val error = AppError.from(exception)
-        _state.value = AppModelState(error = true, errorMessage = error.code)
+    fun changeMap(lat: Double, long: Double) {
+        _map.value = MapModel(lat = lat, long = long)
     }
 
     fun resetState() {
@@ -197,8 +129,18 @@ class PostViewModel @Inject constructor(
         _media.value = noMedia
     }
 
+    fun clearMap() {
+        _map.value = noMap
+    }
+
     private fun clearEdited() {
         edited.value = empty
         _media.value = noMedia
+        _map.value = noMap
+    }
+
+    fun handleError(exception: Throwable) {
+        val error = AppError.from(exception)
+        _state.value = AppModelState(error = true, errorMessage = error.code)
     }
 }

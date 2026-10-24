@@ -71,6 +71,6 @@ class MapFragment : Fragment(R.layout.fragment_map), OnSaveActionListener {
             handle["lat"] = viewModel.map.value.lat
             handle["long"] = viewModel.map.value.long
         }
-        navController.popBackStack()
+        navController.navigateUp()
     }
 }

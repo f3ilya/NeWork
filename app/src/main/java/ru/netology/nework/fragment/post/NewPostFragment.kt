@@ -2,9 +2,11 @@ package ru.netology.nework.fragment.post
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.net.toUri
 import androidx.core.view.isVisible
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -18,6 +20,7 @@ import kotlinx.coroutines.launch
 import ru.netology.nework.R
 import ru.netology.nework.databinding.FragmentNewPostBinding
 import ru.netology.nework.dto.AttachmentType
+import ru.netology.nework.dto.Coordinates
 import ru.netology.nework.extensions.hideKeyboard
 import ru.netology.nework.extensions.load
 import ru.netology.nework.extensions.registerImagePickerLauncher
@@ -27,7 +30,6 @@ import ru.netology.nework.extensions.showPhotoSelectionDialog
 import ru.netology.nework.extensions.uriToFile
 import ru.netology.nework.map.YandexMapManager
 import ru.netology.nework.media.MediaPlaybackManager
-import ru.netology.nework.model.MapModel
 import ru.netology.nework.model.MediaModel
 import ru.netology.nework.util.OnSaveActionListener
 import ru.netology.nework.viewmodel.post.NewPostViewModel
@@ -36,8 +38,8 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListener {
     private val binding by viewBinding(FragmentNewPostBinding::bind)
-    private val viewModel: NewPostViewModel by activityViewModels()
-    private var currentMediaAttachmentType = AttachmentType.AUDIO
+    private val viewModel: NewPostViewModel by viewModels()
+    private var currentMediaAttachmentType: AttachmentType? = null
 
     @Inject
     lateinit var playbackManager: MediaPlaybackManager
@@ -118,6 +120,10 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
             removeMap.setOnClickListener {
                 viewModel.clearMap()
             }
+
+            edit.doAfterTextChanged { text ->
+                viewModel.changeContent(text.toString())
+            }
         }
     }
 
@@ -128,7 +134,17 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
 
                 launch { viewModel.media.collectLatest { bindMedia(it) } }
 
-                launch { viewModel.map.collectLatest { bindMap(it) } }
+                launch {
+                    viewModel.editedPost.collectLatest { post ->
+                        bindMap(post.coordinates)
+                        post.attachment?.let {
+                            viewModel.changeMedia(it.url.toUri(), null, it.type)
+                        }
+                        if (post.content != binding.edit.text.toString()) {
+                            post.content.let(binding.edit::setText)
+                        }
+                    }
+                }
 
                 launch {
                     findNavController().currentBackStackEntryFlow.collectLatest { backStackEntry ->
@@ -139,8 +155,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
                         combine(lat, long) { lat, long ->
                             if (lat != null && long != null) Pair(lat, long) else null
                         }.collectLatest { coordinates ->
-                            if (coordinates != null) {
-                                val (lat, long) = coordinates
+                            coordinates?.let { (lat, long) ->
                                 viewModel.changeMap(lat, long)
                                 handle["lat"] = null
                                 handle["long"] = null
@@ -161,20 +176,25 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
         }
     }
 
-    private fun bindMap(mapModel: MapModel) {
+    private fun bindMap(coordinates: Coordinates?) {
         with(binding) {
-            val lat = mapModel.lat
-            val long = mapModel.long
-            if (lat != null && long != null) {
+            mapContainer.isVisible = false
+            if (coordinates != null) {
+                val lat = coordinates.lat
+                val long = coordinates.long
                 mapContainer.isVisible = true
                 yandexMapManager.showPoint(lat, long)
                 yandexMapManager.disableAllGestures()
-            } else mapContainer.isVisible = false
+            }
         }
     }
 
     private fun bindMedia(mediaModel: MediaModel) {
         with(binding) {
+            attachment.isVisible = false
+            attachmentContainer.imageAttachment.isVisible = false
+            attachmentContainer.audioAttachment.isVisible = false
+            attachmentContainer.videoContainer.isVisible = false
             when (mediaModel.type) {
                 AttachmentType.IMAGE -> {
                     attachment.isVisible = true
@@ -194,6 +214,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
                         )
                     }
                 }
+
                 AttachmentType.AUDIO -> {
                     attachment.isVisible = true
                     attachmentContainer.audioAttachment.isVisible = true
@@ -206,6 +227,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
                         )
                     }
                 }
+
                 null -> {
                     attachment.isVisible = false
                     attachmentContainer.imageAttachment.isVisible = false
@@ -217,8 +239,6 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
     }
 
     override fun onSaveAction() {
-        val content = binding.edit.text.toString()
-        viewModel.changeContent(content)
         hideKeyboard()
         viewModel.save()
     }

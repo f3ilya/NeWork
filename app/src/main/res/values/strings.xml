@@ -77,4 +77,5 @@
     <string name="zoom_in">Zoom in</string>
     <string name="zoom_out">Zoom out</string>
     <string name="show_my_location">Show my location</string>
+    <string name="add_location">Add location</string>
 </resources>

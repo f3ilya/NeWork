@@ -11,7 +11,7 @@ import ru.netology.nework.entity.post.PostEntity
 @Dao
 interface PostDao {
     @Query("SELECT * FROM PostEntity WHERE id = :id")
-    fun getPostById(id: Long): Flow<PostEntity?>
+    fun getPostById(id: Long): Flow<PostEntity>
 
     @Query("SELECT * FROM PostEntity ORDER BY id DESC")
     fun pagingSource(): PagingSource<Int, PostEntity>

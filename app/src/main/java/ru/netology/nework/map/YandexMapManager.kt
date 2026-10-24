@@ -11,6 +11,7 @@ import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.map.IconStyle
 import com.yandex.mapkit.map.InputListener
 import com.yandex.mapkit.map.Map
+import com.yandex.mapkit.map.PlacemarkMapObject
 import com.yandex.mapkit.mapview.MapView
 import com.yandex.mapkit.user_location.UserLocationLayer
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -28,6 +29,7 @@ class YandexMapManager @Inject constructor(
     private var currentMapView: MapView? = null
     private var mapInputListener: InputListener? = null
     private var userLocationLayer: UserLocationLayer? = null
+    private var currentPlacemark: PlacemarkMapObject? = null
     private val imageProvider = DrawableImageProvider(
         context,
         ImageInfo(R.drawable.ic_location_24)
@@ -48,9 +50,10 @@ class YandexMapManager @Inject constructor(
         val map = mapView.mapWindow.map
         val targetPoint = Point(latitude, longitude)
         map.mapObjects.clear()
-        map.mapObjects.addPlacemark { placemarkMapObject ->
+        currentPlacemark = map.mapObjects.addPlacemark { placemarkMapObject ->
             placemarkMapObject.geometry = targetPoint
             placemarkMapObject.setIcon(imageProvider)
+            placemarkMapObject.setIconStyle(iconStyle)
         }
         map.move(CameraPosition(targetPoint, 15.0f, 0.0f, 0.0f))
     }
@@ -64,7 +67,7 @@ class YandexMapManager @Inject constructor(
         mapInputListener = object : InputListener {
             override fun onMapTap(map: Map, point: Point) {
                 map.mapObjects.clear()
-                map.mapObjects.addPlacemark { placemarkMapObject ->
+                currentPlacemark = map.mapObjects.addPlacemark { placemarkMapObject ->
                     placemarkMapObject.geometry = point
                     placemarkMapObject.setIcon(imageProvider)
                     placemarkMapObject.setIconStyle(iconStyle)
@@ -127,10 +130,13 @@ class YandexMapManager @Inject constructor(
     }
 
     fun detachMap() {
-        currentMapView?.mapWindow?.map?.removeInputListener(WeakReference(mapInputListener))
+        if (mapInputListener != null) {
+            currentMapView?.mapWindow?.map?.removeInputListener(WeakReference(mapInputListener))
+        }
         userLocationLayer = null
         mapInputListener = null
         currentMapView = null
+        currentPlacemark = null
     }
 
     override fun onStart(owner: LifecycleOwner) {

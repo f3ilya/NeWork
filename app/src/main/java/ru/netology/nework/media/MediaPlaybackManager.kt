@@ -45,10 +45,12 @@ class MediaPlaybackManager @Inject constructor(
                 if (state == Player.STATE_READY) currentSeekBar?.max = exoPlayer.duration.toInt()
                 progressUpdate(exoPlayer.isPlaying)
             }
+
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 currentPlayButton?.isChecked = isPlaying
                 progressUpdate(isPlaying)
             }
+
             override fun onPlayerError(error: PlaybackException) {
                 onErrorListener?.invoke(error)
                 stopAndReset()
@@ -73,6 +75,7 @@ class MediaPlaybackManager @Inject constructor(
             override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) exoPlayer.seekTo(progress.toLong())
             }
+
             override fun onStartTrackingTouch(sb: SeekBar?) {}
             override fun onStopTrackingTouch(sb: SeekBar?) {}
         })
@@ -96,7 +99,9 @@ class MediaPlaybackManager @Inject constructor(
         exoPlayer.play()
     }
 
-    fun setOnErrorListener(listener: (Throwable) -> Unit) { this.onErrorListener = listener }
+    fun setOnErrorListener(listener: (Throwable) -> Unit) {
+        this.onErrorListener = listener
+    }
 
 
     fun playAudio(postId: Long, url: String, seekBar: SeekBar, playButton: MaterialButton) {

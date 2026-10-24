@@ -87,6 +87,9 @@
         <action
             android:id="@+id/action_detailedPostFragment_to_postsFragment"
             app:destination="@id/postsFragment" />
+        <action
+            android:id="@+id/action_detailedPostFragment_to_newPostFragment"
+            app:destination="@id/newPostFragment" />
     </fragment>
 
     <fragment
@@ -144,12 +147,18 @@
         android:name="ru.netology.nework.fragment.post.NewPostFragment"
         android:label="@string/new_post"
         tools:layout="@layout/fragment_new_post">
+        <argument
+            android:name="postId"
+            app:argType="long" />
         <action
             android:id="@+id/action_newPostFragment_to_postsFragment"
             app:destination="@id/postsFragment" />
         <action
             android:id="@+id/action_newPostFragment_to_mapFragment"
             app:destination="@id/mapFragment" />
+        <action
+            android:id="@+id/action_newPostFragment_to_detailedPostFragment"
+            app:destination="@id/detailedPostFragment" />
     </fragment>
 
     <!-- Экран создания метки на карте -->
@@ -157,7 +166,7 @@
     <fragment
         android:id="@+id/mapFragment"
         android:name="ru.netology.nework.fragment.map.MapFragment"
-        android:label="fragment_map"
+        android:label="@string/add_location"
         tools:layout="@layout/fragment_map" >
         <action
             android:id="@+id/action_mapFragment_to_newPostFragment"

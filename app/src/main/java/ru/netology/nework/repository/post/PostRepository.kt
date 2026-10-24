@@ -10,7 +10,7 @@ interface PostRepository {
     val data: Flow<PagingData<Post>>
     fun setManualRefresh(isManual: Boolean)
     suspend fun likePost(id: Long, likeByMe: Boolean)
-    suspend fun getPostById(id: Long): Flow<Post?>
+    suspend fun getPostById(id: Long): Flow<Post>
     suspend fun savePost(post: Post)
     suspend fun saveMedia(file: File): Media
     suspend fun removePost(id: Long)

@@ -1,6 +1,7 @@
 package ru.netology.nework.viewmodel.post
 
 import android.net.Uri
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -11,6 +12,10 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.netology.nework.dto.Attachment
 import ru.netology.nework.dto.AttachmentType
@@ -19,7 +24,6 @@ import ru.netology.nework.dto.Post
 import ru.netology.nework.error.AppError
 import ru.netology.nework.error.UnknownError
 import ru.netology.nework.model.AppModelState
-import ru.netology.nework.model.MapModel
 import ru.netology.nework.model.MediaModel
 import ru.netology.nework.repository.post.PostRepository
 import java.io.File
@@ -47,16 +51,14 @@ private val empty = Post(
 )
 
 private val noMedia = MediaModel()
-private val noMap = MapModel()
 
 @HiltViewModel
 class NewPostViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val repository: PostRepository,
 ) : ViewModel() {
     private val _state = MutableStateFlow(AppModelState())
     val state: StateFlow<AppModelState> = _state.asStateFlow()
-
-    val edited = MutableStateFlow(empty)
 
     private val _postCreated = MutableSharedFlow<Unit>()
     val postCreated: SharedFlow<Unit> = _postCreated.asSharedFlow()
@@ -64,34 +66,40 @@ class NewPostViewModel @Inject constructor(
     private val _media = MutableStateFlow(MediaModel())
     val media: StateFlow<MediaModel> = _media.asStateFlow()
 
-    private val _map = MutableStateFlow(MapModel())
-    val map: StateFlow<MapModel> = _map.asStateFlow()
+    private val _editedPost = MutableStateFlow(empty)
+    val editedPost: StateFlow<Post> = _editedPost.asStateFlow()
+
+    init {
+        val postId = savedStateHandle.get<Long>("postId")
+        if (postId == null) {
+            _editedPost.value = empty
+        } else {
+            viewModelScope.launch {
+                repository.getPostById(postId)
+                    .onStart { _state.value = AppModelState(loading = true) }
+                    .onEach { resetState() }
+                    .catch { exception -> handleError(exception) }
+                    .collect { post -> _editedPost.value = post }
+            }
+        }
+    }
 
     @OptIn(ExperimentalTime::class)
     fun save() {
-        edited.value.let { post ->
+        _editedPost.value.let { post ->
             _state.value = AppModelState(loading = true)
             viewModelScope.launch {
                 runCatching {
                     val mediaState = _media.value
-                    val mapState = _map.value
-                    val coordinates = if (mapState.lat != null && mapState.long != null) {
-                        Coordinates(mapState.lat, mapState.long)
-                    } else null
-                    val timePublished = Clock.System.now().toString()
-                    if (mediaState == noMedia || mediaState.file == null) {
-                        repository.savePost(
-                            post.copy(
-                                published = timePublished,
-                                coordinates = coordinates
-                            )
-                        )
+                    val timePublished = post.published.ifEmpty { Clock.System.now().toString() }
+                    if (mediaState.file == null) {
+                        val updatedPost = post.copy(published = timePublished)
+                        repository.savePost(updatedPost)
                     } else {
                         val attachmentType = mediaState.type ?: throw UnknownError()
                         val media = repository.saveMedia(mediaState.file)
                         val updatedPost = post.copy(
                             published = timePublished,
-                            coordinates = coordinates,
                             attachment = Attachment(url = media.url, type = attachmentType)
                         )
                         repository.savePost(updatedPost)
@@ -110,15 +118,19 @@ class NewPostViewModel @Inject constructor(
     }
 
     fun changeContent(content: String) {
-        edited.value = edited.value.copy(content = content.trim())
+        _editedPost.update { post ->
+            post.copy(content = content.trim())
+        }
     }
 
-    fun changeMedia(uri: Uri, file: File, type: AttachmentType) {
+    fun changeMedia(uri: Uri, file: File?, type: AttachmentType?) {
         _media.value = MediaModel(uri = uri, file = file, type = type)
     }
 
     fun changeMap(lat: Double, long: Double) {
-        _map.value = MapModel(lat = lat, long = long)
+        _editedPost.update { post ->
+            post.copy(coordinates = Coordinates(lat = lat, long = long))
+        }
     }
 
     fun resetState() {
@@ -127,16 +139,21 @@ class NewPostViewModel @Inject constructor(
 
     fun clearMedia() {
         _media.value = noMedia
+        _editedPost.update { post ->
+            post.copy(attachment = null)
+        }
     }
 
     fun clearMap() {
-        _map.value = noMap
+        _editedPost.update { post ->
+            post.copy(coordinates = null)
+        }
     }
 
     private fun clearEdited() {
-        edited.value = empty
+        _editedPost.value = empty
         _media.value = noMedia
-        _map.value = noMap
+        clearMap()
     }
 
     fun handleError(exception: Throwable) {

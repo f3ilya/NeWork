@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -34,7 +34,7 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
     @Inject
     lateinit var playbackManager: MediaPlaybackManager
     private val binding by viewBinding(FragmentPostsBinding::bind)
-    private val viewModel: PostsViewModel by activityViewModels()
+    private val viewModel: PostsViewModel by viewModels()
     private lateinit var adapter: PostsAdapter
     private var isManualScrollNeeded = false
 
@@ -96,7 +96,8 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
             }
 
             override fun onEdit(post: Post) {
-                TODO("Not yet implemented")
+                val action = PostsFragmentDirections.actionPostsFragmentToNewPostFragment(post.id)
+                findNavController().navigate(action)
             }
         })
 
@@ -156,7 +157,7 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
 
                             if (viewModel.isInitialLoad && !isListEmpty) {
                                 viewModel.isInitialLoad = false
-                                viewModel.manualRefresh()
+                                list.scrollToPosition(0)
                             }
 
                             progress.isVisible =

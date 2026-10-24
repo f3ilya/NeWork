@@ -39,22 +39,22 @@ class PostRepositoryImpl @Inject constructor(
     }
 
     override suspend fun likePost(id: Long, likeByMe: Boolean) {
-            val post = if (likeByMe) {
-                apiService.dislikePost(id).getOrThrow()
-            } else {
-                apiService.likePost(id).getOrThrow()
-            }
-            postDao.insert(PostEntity.fromDto(post))
+        val post = if (likeByMe) {
+            apiService.dislikePost(id).getOrThrow()
+        } else {
+            apiService.likePost(id).getOrThrow()
+        }
+        postDao.insert(PostEntity.fromDto(post))
     }
 
-    override suspend fun getPostById(id: Long): Flow<Post?> = postDao.getPostById(id).map { entity ->
-        entity?.toDto()
+    override suspend fun getPostById(id: Long): Flow<Post> = postDao.getPostById(id).map { entity ->
+        entity.toDto()
     }
 
     override suspend fun savePost(post: Post) {
-            val response = apiService.savePost(post)
-            val body = response.getOrThrow()
-            postDao.insert(PostEntity.fromDto(body))
+        val response = apiService.savePost(post)
+        val body = response.getOrThrow()
+        postDao.insert(PostEntity.fromDto(body))
     }
 
     override suspend fun saveMedia(file: File): Media {

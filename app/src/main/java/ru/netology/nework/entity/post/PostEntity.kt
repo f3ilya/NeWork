@@ -36,7 +36,7 @@ data class PostEntity(
         authorAvatar = authorAvatar.orEmpty(),
         content = content,
         published = published,
-        coordinates = coordinates ?: Coordinates(Double.NaN, Double.NaN),
+        coordinates = coordinates,
         link = link.orEmpty(),
         mentionIds = mentionIds,
         mentionedMe = mentionedMe,

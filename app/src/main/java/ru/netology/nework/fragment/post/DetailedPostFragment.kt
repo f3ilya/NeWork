@@ -5,12 +5,11 @@ import android.view.View
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
@@ -19,6 +18,7 @@ import kotlinx.coroutines.launch
 import ru.netology.nework.R
 import ru.netology.nework.databinding.FragmentDetailedPostBinding
 import ru.netology.nework.dto.AttachmentType
+import ru.netology.nework.dto.Coordinates
 import ru.netology.nework.dto.Post
 import ru.netology.nework.extensions.load
 import ru.netology.nework.extensions.renderAvatarStack
@@ -34,8 +34,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
     private val binding by viewBinding(FragmentDetailedPostBinding::bind)
-    private val viewModel: DetailedPostViewModel by activityViewModels()
-    private val args: DetailedPostFragmentArgs by navArgs()
+    private val viewModel: DetailedPostViewModel by viewModels()
 
     @Inject
     lateinit var playbackManager: MediaPlaybackManager
@@ -46,7 +45,6 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel.setDetailedPostId(args.postId)
         setupYandexMap()
         setupExoPlayer()
         observeViewModel()
@@ -71,16 +69,7 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
                     viewModel.detailedPost.collectLatest { post ->
                         post?.let {
                             bindPost(post)
-                            if (it.coordinates != null && !it.coordinates.lat.isNaN() && !it.coordinates.long.isNaN()) {
-                                binding.map.isVisible = true
-                                yandexMapManager.showPoint(
-                                    it.coordinates.lat,
-                                    it.coordinates.long
-                                )
-                                yandexMapManager.disableAllGestures()
-                            } else {
-                                binding.map.isVisible = false
-                            }
+                            bindMap(post.coordinates)
                         }
                     }
                 }
@@ -99,8 +88,22 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
         }
     }
 
+    private fun bindMap(coordinates: Coordinates?) {
+        with(binding) {
+            map.isVisible = false
+            if (coordinates != null) {
+                val lat = coordinates.lat
+                val long = coordinates.long
+                map.isVisible = true
+                yandexMapManager.showPoint(lat, long)
+                yandexMapManager.disableAllGestures()
+
+            }
+        }
+    }
+
     private fun bindPost(post: Post) {
-        binding.apply {
+        with(binding) {
             if (!post.authorAvatar.isNullOrBlank()) {
                 authorAvatar.load(post.authorAvatar, true)
             } else {
@@ -124,30 +127,14 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
             attachmentContainer.videoContainer.isVisible = false
             attachmentContainer.audioAttachment.isVisible = false
 
-            val isThisPlaying = playbackManager.currentPlayingPostId == post.id
-
             when (post.attachment?.type) {
                 AttachmentType.IMAGE -> {
-                    if (post.attachment.url.isNotEmpty()) {
-                        attachmentContainer.imageAttachment.load(post.attachment.url)
-                        attachmentContainer.imageAttachment.isVisible = true
-                    }
+                    attachmentContainer.imageAttachment.load(post.attachment.url)
+                    attachmentContainer.imageAttachment.isVisible = true
                 }
 
                 AttachmentType.VIDEO -> {
                     attachmentContainer.videoContainer.isVisible = true
-                    if (isThisPlaying) {
-                        playbackManager.rebindVideo(
-                            attachmentContainer.videoAttachment,
-                            attachmentContainer.videoPlaceholder
-                        )
-                    } else {
-                        attachmentContainer.videoPlaceholder.isVisible = true
-                        attachmentContainer.videoAttachment.isVisible = false
-                        if (attachmentContainer.videoAttachment.player != null) {
-                            attachmentContainer.videoAttachment.player = null
-                        }
-                    }
                     attachmentContainer.videoContainer.setOnClickListener {
                         playbackManager.playVideo(
                             postId = post.id,
@@ -160,17 +147,6 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
 
                 AttachmentType.AUDIO -> {
                     attachmentContainer.audioAttachment.isVisible = true
-
-                    if (isThisPlaying) {
-                        playbackManager.rebindAudio(
-                            attachmentContainer.audioSeekBar,
-                            attachmentContainer.audioPlayPause
-                        )
-                    } else {
-                        attachmentContainer.audioPlayPause.isChecked = false
-                        attachmentContainer.audioSeekBar.progress = 0
-                    }
-
                     attachmentContainer.audioPlayPause.setOnClickListener {
                         playbackManager.playAudio(
                             postId = post.id,
@@ -253,7 +229,11 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
                             }
 
                             R.id.edit -> {
-                                TODO()
+                                val action =
+                                    DetailedPostFragmentDirections.actionDetailedPostFragmentToNewPostFragment(
+                                        post.id
+                                    )
+                                findNavController().navigate(action)
                                 true
                             }
 

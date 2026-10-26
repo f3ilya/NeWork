@@ -25,7 +25,9 @@ import ru.netology.nework.extensions.load
 import ru.netology.nework.extensions.shareIntent
 import ru.netology.nework.extensions.showConfirmationDialog
 import ru.netology.nework.fragment.post.DetailedPostFragmentArgs
+import ru.netology.nework.fragment.user.UsersFragmentArgs
 import ru.netology.nework.media.MediaPlaybackManager
+import ru.netology.nework.util.FragmentMode
 import ru.netology.nework.util.OnSaveActionListener
 import javax.inject.Inject
 
@@ -62,9 +64,6 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
 
     private fun setupMenu() {
         with(binding) {
-
-//          findNavController(R.id.nav_host_fragment).navigate() TODO
-
             val navHostFragment =
                 supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
             val navController = navHostFragment.navController
@@ -144,10 +143,35 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                         toolbar.setOnMenuItemClickListener { item ->
                             if (item.itemId == R.id.action_save) {
                                 val currentFragment =
-                                    navHostFragment.childFragmentManager.fragments.firstOrNull()
+                                    navHostFragment.childFragmentManager.primaryNavigationFragment
                                 (currentFragment as? OnSaveActionListener)?.onSaveAction()
                                 true
                             } else false
+                        }
+                    }
+
+                    R.id.detailedUsersListFragment -> {
+                        hideBottomNavAndAvatar(bottomNavigation)
+                        val args = arguments?.let { UsersFragmentArgs.fromBundle(it) }
+                        val mode = args?.fragmentMode ?: FragmentMode.USERS
+                        toolbar.title = when (mode) {
+                            FragmentMode.LIKERS -> getString(R.string.likers)
+                            FragmentMode.MENTIONED -> getString(R.string.mentioned)
+                            FragmentMode.SPEAKERS -> getString(R.string.speakers)
+                            FragmentMode.PARTICIPANTS -> getString(R.string.participants)
+                            FragmentMode.SELECTED -> getString(R.string.select_users)
+                            FragmentMode.USERS -> getString(R.string.app_name)
+                        }
+                        if (mode == FragmentMode.SELECTED) {
+                            toolbar.inflateMenu(R.menu.menu_save)
+                            toolbar.setOnMenuItemClickListener { item ->
+                                if (item.itemId == R.id.action_save) {
+                                    val currentFragment =
+                                        navHostFragment.childFragmentManager.primaryNavigationFragment
+                                    (currentFragment as? OnSaveActionListener)?.onSaveAction()
+                                    true
+                                } else false
+                            }
                         }
                     }
 

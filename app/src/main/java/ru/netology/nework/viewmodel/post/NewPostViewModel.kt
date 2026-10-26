@@ -1,28 +1,38 @@
 package ru.netology.nework.viewmodel.post
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.netology.nework.dto.Attachment
 import ru.netology.nework.dto.AttachmentType
 import ru.netology.nework.dto.Coordinates
 import ru.netology.nework.dto.Post
+import ru.netology.nework.dto.UserResponse
 import ru.netology.nework.error.AppError
 import ru.netology.nework.error.UnknownError
+import ru.netology.nework.fragment.post.NewPostFragmentArgs
 import ru.netology.nework.model.AppModelState
 import ru.netology.nework.model.MediaModel
 import ru.netology.nework.repository.post.PostRepository
@@ -69,9 +79,29 @@ class NewPostViewModel @Inject constructor(
     private val _editedPost = MutableStateFlow(empty)
     val editedPost: StateFlow<Post> = _editedPost.asStateFlow()
 
+    private val args = NewPostFragmentArgs.fromSavedStateHandle(savedStateHandle)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val users: StateFlow<List<UserResponse>> = _editedPost.map { it.mentionIds }
+        .distinctUntilChanged()
+        .flatMapLatest { ids ->
+            if (ids.isEmpty()) {
+                flowOf(emptyList())
+            } else {
+                repository.getUsersByIds(_editedPost.value.mentionIds)
+                    .onStart { _state.value = AppModelState(loading = true) }
+                    .onEach { resetState() }
+                    .catch { exception -> handleError(exception) }
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(0, 0),
+            initialValue = emptyList()
+        )
+
     init {
-        val postId = savedStateHandle.get<Long>("postId")
-        if (postId == null) {
+        val postId = args.postId
+        if (postId == 0L) {
             _editedPost.value = empty
         } else {
             viewModelScope.launch {
@@ -86,6 +116,7 @@ class NewPostViewModel @Inject constructor(
 
     @OptIn(ExperimentalTime::class)
     fun save() {
+        if (_state.value.loading) return
         _editedPost.value.let { post ->
             _state.value = AppModelState(loading = true)
             viewModelScope.launch {
@@ -133,6 +164,13 @@ class NewPostViewModel @Inject constructor(
         }
     }
 
+    fun changeMentioned(ids: List<Long>) {
+        Log.d("MyDebugChangeMent", ids.toString())
+        _editedPost.update { post ->
+            post.copy(mentionIds = ids)
+        }
+    }
+
     fun resetState() {
         _state.value = AppModelState()
     }
@@ -147,6 +185,12 @@ class NewPostViewModel @Inject constructor(
     fun clearMap() {
         _editedPost.update { post ->
             post.copy(coordinates = null)
+        }
+    }
+
+    fun clearMentioned() {
+        _editedPost.update { post ->
+            post.copy(mentionIds = emptyList())
         }
     }
 

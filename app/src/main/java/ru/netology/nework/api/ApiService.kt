@@ -21,6 +21,7 @@ import ru.netology.nework.BuildConfig
 import ru.netology.nework.dto.Media
 import ru.netology.nework.dto.Post
 import ru.netology.nework.dto.Token
+import ru.netology.nework.dto.UserResponse
 
 private const val BASE_URL = "${BuildConfig.BASE_URL}/api/"
 
@@ -83,12 +84,6 @@ interface ApiService {
         @Query("count") count: Int,
     ): Response<List<Post>>
 
-    @GET("posts/{id}/after")
-    suspend fun getAfterPosts(
-        @Path("id") id: Long,
-        @Query("count") count: Int,
-    ): Response<List<Post>>
-
     @GET("posts/latest")
     suspend fun getLatestPosts(@Query("count") count: Int): Response<List<Post>>
 
@@ -97,4 +92,9 @@ interface ApiService {
 
     @DELETE("posts/{id}/likes")
     suspend fun dislikePost(@Path("id") id: Long): Response<Post>
+
+    /** === USERS === **/
+
+    @GET("users")
+    suspend fun getAllUsers(): Response<List<UserResponse>>
 }

@@ -7,30 +7,36 @@
     android:layout_height="match_parent">
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:fillViewport="true"
-        android:paddingBottom="?attr/actionBarSize"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:paddingBottom="?attr/actionBarSize">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/common_spacing">
 
-            <EditText
-                android:id="@+id/edit"
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/nestedScrollEdit"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:autofillHints="text"
-                android:background="@android:color/transparent"
-                android:gravity="top|start"
-                android:hint="@string/post_hint"
-                android:inputType="textMultiLine|textCapSentences"
-                android:minHeight="120dp"
+                android:layout_height="@dimen/attachment_height"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent">
+
+                <EditText
+                    android:id="@+id/edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:autofillHints="text"
+                    android:background="?attr/colorSurfaceContainerLow"
+                    android:gravity="top|start"
+                    android:hint="@string/post_hint"
+                    android:inputType="textMultiLine|textCapSentences"
+                    android:minHeight="@dimen/attachment_height"
+                    android:nestedScrollingEnabled="true" />
+
+            </androidx.core.widget.NestedScrollView>
 
             <LinearLayout
                 android:id="@+id/attachment"
@@ -41,7 +47,7 @@
                 android:orientation="vertical"
                 android:visibility="gone"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/edit"
+                app:layout_constraintTop_toBottomOf="@id/nestedScrollEdit"
                 tools:visibility="visible">
 
                 <include
@@ -96,6 +102,7 @@
                 android:id="@+id/mapContainer"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/attachment_height"
+                android:paddingBottom="@dimen/common_spacing"
                 android:visibility="gone"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/mentioned"
@@ -203,5 +210,22 @@
         </com.google.android.material.overflow.OverflowLinearLayout>
 
     </com.google.android.material.dockedtoolbar.DockedToolbarLayout>
+
+    <FrameLayout
+        android:id="@+id/loadingOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/colorSurface"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" />
+
+    </FrameLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

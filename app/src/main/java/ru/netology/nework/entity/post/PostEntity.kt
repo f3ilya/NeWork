@@ -25,6 +25,7 @@ data class PostEntity(
     val mentionedMe: Boolean,
     val likeOwnerIds: List<Long>,
     val likedByMe: Boolean,
+    @Embedded(prefix = "attach_")
     val attachment: Attachment?,
     val users: Map<String, UserPreview>
 ) {

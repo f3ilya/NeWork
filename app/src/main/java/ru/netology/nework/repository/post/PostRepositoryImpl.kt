@@ -11,9 +11,12 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import ru.netology.nework.api.ApiService
 import ru.netology.nework.dao.post.PostDao
+import ru.netology.nework.dao.user.UserDao
 import ru.netology.nework.dto.Media
 import ru.netology.nework.dto.Post
+import ru.netology.nework.dto.UserResponse
 import ru.netology.nework.entity.post.PostEntity
+import ru.netology.nework.entity.user.toDto
 import ru.netology.nework.extensions.getOrThrow
 import java.io.File
 import javax.inject.Inject
@@ -22,6 +25,7 @@ import javax.inject.Singleton
 @Singleton
 class PostRepositoryImpl @Inject constructor(
     private val postDao: PostDao,
+    private val userDao: UserDao,
     private val apiService: ApiService,
     private val mediator: PostRemoteMediator,
 ) : PostRepository {
@@ -47,9 +51,8 @@ class PostRepositoryImpl @Inject constructor(
         postDao.insert(PostEntity.fromDto(post))
     }
 
-    override suspend fun getPostById(id: Long): Flow<Post> = postDao.getPostById(id).map { entity ->
-        entity.toDto()
-    }
+    override suspend fun getPostById(id: Long): Flow<Post> =
+        postDao.getPostById(id).map(PostEntity::toDto)
 
     override suspend fun savePost(post: Post) {
         val response = apiService.savePost(post)
@@ -69,4 +72,7 @@ class PostRepositoryImpl @Inject constructor(
         apiService.removePost(id).getOrThrow()
         postDao.removePost(id)
     }
+
+    override fun getUsersByIds(ids: List<Long>): Flow<List<UserResponse>> =
+        userDao.getUsersByIds(ids).map { it.toDto() }
 }

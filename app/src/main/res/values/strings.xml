@@ -78,4 +78,9 @@
     <string name="zoom_out">Zoom out</string>
     <string name="show_my_location">Show my location</string>
     <string name="add_location">Add location</string>
+    <string name="description_user_avatar">User avatar</string>
+    <string name="speakers">Speakers</string>
+    <string name="participants">Participants</string>
+    <string name="select_users">Select users</string>
+    <string name="user_not_found">User not found.</string>
 </resources>

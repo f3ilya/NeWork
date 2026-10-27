@@ -25,6 +25,7 @@ import ru.netology.nework.extensions.renderAvatarStack
 import ru.netology.nework.map.YandexMapManager
 import ru.netology.nework.media.MediaPlaybackManager
 import ru.netology.nework.model.AvatarModel
+import ru.netology.nework.util.FragmentMode
 import ru.netology.nework.viewmodel.post.DetailedPostViewModel
 import java.time.Instant
 import java.time.ZoneId
@@ -185,9 +186,12 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
                     TODO()
                 },
                 onMoreClickListener = {
-//                    val action = DetailedPostFragmentDirections.actionDetailedPostFragmentToLikeOwnersFragment(post.id)
-//                    findNavController().navigate(action)
-                    TODO()
+                    val action =
+                        DetailedPostFragmentDirections.actionDetailedPostFragmentToDetailedUsersListFragment(
+                            fragmentMode = FragmentMode.LIKERS,
+                            userIds = post.likeOwnerIds.toLongArray()
+                        )
+                    findNavController().navigate(action)
                 }
             )
 
@@ -209,9 +213,12 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
                         TODO()
                     },
                     onMoreClickListener = {
-//                    val action = DetailedPostFragmentDirections.actionDetailedPostFragmentToLikeOwnersFragment(post.id)
-//                    findNavController().navigate(action)
-                        TODO()
+                        val action =
+                            DetailedPostFragmentDirections.actionDetailedPostFragmentToDetailedUsersListFragment(
+                                fragmentMode = FragmentMode.MENTIONED,
+                                userIds = post.mentionIds.toLongArray()
+                            )
+                        findNavController().navigate(action)
                     }
                 )
             } else mentionedContainer.root.isVisible = false

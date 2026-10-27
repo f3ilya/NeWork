@@ -1,6 +1,7 @@
 package ru.netology.nework.fragment.post
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
@@ -15,22 +16,25 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import ru.netology.nework.R
 import ru.netology.nework.databinding.FragmentNewPostBinding
 import ru.netology.nework.dto.AttachmentType
 import ru.netology.nework.dto.Coordinates
+import ru.netology.nework.dto.UserResponse
 import ru.netology.nework.extensions.hideKeyboard
 import ru.netology.nework.extensions.load
 import ru.netology.nework.extensions.registerImagePickerLauncher
 import ru.netology.nework.extensions.registerMediaFilePickerLauncher
+import ru.netology.nework.extensions.renderAvatarStack
 import ru.netology.nework.extensions.showMediaSelectionDialog
 import ru.netology.nework.extensions.showPhotoSelectionDialog
 import ru.netology.nework.extensions.uriToFile
 import ru.netology.nework.map.YandexMapManager
 import ru.netology.nework.media.MediaPlaybackManager
+import ru.netology.nework.model.AvatarModel
 import ru.netology.nework.model.MediaModel
+import ru.netology.nework.util.FragmentMode
 import ru.netology.nework.util.OnSaveActionListener
 import ru.netology.nework.viewmodel.post.NewPostViewModel
 import javax.inject.Inject
@@ -98,10 +102,12 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
     private fun setupListeners() {
         with(binding) {
             btnPhoto.setOnClickListener {
+                hideKeyboard()
                 showPhotoSelectionDialog(launcher = pickPhotoLauncher)
             }
 
             btnMedia.setOnClickListener {
+                hideKeyboard()
                 showMediaSelectionDialog(
                     launcher = pickMediaLauncher,
                     onAudio = { currentMediaAttachmentType = AttachmentType.AUDIO },
@@ -109,7 +115,17 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
             }
 
             btnLocation.setOnClickListener {
+                hideKeyboard()
                 findNavController().navigate(R.id.action_newPostFragment_to_mapFragment)
+            }
+
+            btnUsers.setOnClickListener {
+                hideKeyboard()
+                val action =
+                    NewPostFragmentDirections.actionNewPostFragmentToDetailedUsersListFragment(
+                        fragmentMode = FragmentMode.SELECTED
+                    )
+                findNavController().navigate(action)
             }
 
             removeAttachment.setOnClickListener {
@@ -119,6 +135,10 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
 
             removeMap.setOnClickListener {
                 viewModel.clearMap()
+            }
+
+            removeMentioned.setOnClickListener {
+                viewModel.clearMentioned()
             }
 
             edit.doAfterTextChanged { text ->
@@ -133,6 +153,8 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
                 launch { viewModel.postCreated.collectLatest { findNavController().navigateUp() } }
 
                 launch { viewModel.media.collectLatest { bindMedia(it) } }
+
+                launch { viewModel.users.collectLatest { bindMentioned(it) } }
 
                 launch {
                     viewModel.editedPost.collectLatest { post ->
@@ -149,23 +171,21 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
                 launch {
                     findNavController().currentBackStackEntryFlow.collectLatest { backStackEntry ->
                         val handle = backStackEntry.savedStateHandle
-                        val lat = handle.getStateFlow<Double?>("lat", null)
-                        val long = handle.getStateFlow<Double?>("long", null)
+                        val lat = handle.remove<Double>("lat")
+                        val long = handle.remove<Double>("long")
+                        if (lat != null && long != null) {
+                            viewModel.changeMap(lat, long)
+                        }
 
-                        combine(lat, long) { lat, long ->
-                            if (lat != null && long != null) Pair(lat, long) else null
-                        }.collectLatest { coordinates ->
-                            coordinates?.let { (lat, long) ->
-                                viewModel.changeMap(lat, long)
-                                handle["lat"] = null
-                                handle["long"] = null
-                            }
+                        handle.remove<LongArray>("users")?.let {
+                            viewModel.changeMentioned(it.toList())
                         }
                     }
                 }
 
                 launch {
                     viewModel.state.collectLatest { state ->
+                        binding.loadingOverlay.isVisible = state.loading
                         if (state.error && state.errorMessage != null) {
                             error(state.errorMessage)
                             viewModel.resetState()
@@ -173,6 +193,39 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
                     }
                 }
             }
+        }
+    }
+
+    private fun bindMentioned(users: List<UserResponse>) {
+        Log.d("MyDebugBind", users.toString())
+        with(binding) {
+            if (users.isNotEmpty()) {
+                mentioned.isVisible = true
+                mentionedContainer.mentionedIcon.text = users.size.toString()
+                val mentionModels = users.map { user ->
+                    AvatarModel(
+                        userId = user.id,
+                        avatarUrl = user.avatar
+                    )
+                }
+                mentionedContainer.avatarMentionedStack.renderAvatarStack(
+                    models = mentionModels,
+                    moreButton = mentionedContainer.moreMentioned,
+                    onAvatarClickListener = { userId ->
+//                    val action = NewPostFragmentDirections.actionNewPostFragmentToDetailedUsersListFragment(post.id)
+//                    findNavController().navigate(action)
+                        TODO()
+                    },
+                    onMoreClickListener = {
+                        val action =
+                            NewPostFragmentDirections.actionNewPostFragmentToDetailedUsersListFragment(
+                                fragmentMode = FragmentMode.MENTIONED,
+                                userIds = users.map { it.id }.toLongArray()
+                            )
+                        findNavController().navigate(action)
+                    }
+                )
+            } else mentioned.isVisible = false
         }
     }
 

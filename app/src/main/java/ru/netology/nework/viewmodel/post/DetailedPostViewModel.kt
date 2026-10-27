@@ -19,6 +19,7 @@ import kotlinx.coroutines.withContext
 import ru.netology.nework.auth.AppAuth
 import ru.netology.nework.dto.Post
 import ru.netology.nework.error.AppError
+import ru.netology.nework.fragment.post.DetailedPostFragmentArgs
 import ru.netology.nework.model.AppModelState
 import ru.netology.nework.repository.post.PostRepository
 import javax.inject.Inject
@@ -35,21 +36,18 @@ class DetailedPostViewModel @Inject constructor(
     private val _detailedPost = MutableStateFlow<Post?>(null)
     val detailedPost: StateFlow<Post?> = _detailedPost.asStateFlow()
 
+    private val args = DetailedPostFragmentArgs.fromSavedStateHandle(savedStateHandle)
+
     init {
-        val postId = savedStateHandle.get<Long>("postId")
-        if (postId == null) {
-            _detailedPost.value = null
-        } else {
-            viewModelScope.launch {
-                repository.getPostById(postId)
-                    .combine(appAuth.authStateFlow) { post, authState ->
-                        post.copy(ownedByMe = post.authorId == authState.id)
-                    }
-                    .onStart { _state.value = AppModelState(loading = true) }
-                    .onEach { resetState() }
-                    .catch { exception -> handleError(exception) }
-                    .collect { post -> _detailedPost.value = post }
-            }
+        viewModelScope.launch {
+            repository.getPostById(args.postId)
+                .combine(appAuth.authStateFlow) { post, authState ->
+                    post.copy(ownedByMe = post.authorId == authState.id)
+                }
+                .onStart { _state.value = AppModelState(loading = true) }
+                .onEach { resetState() }
+                .catch { exception -> handleError(exception) }
+                .collect { post -> _detailedPost.value = post }
         }
     }
 

@@ -44,6 +44,7 @@ data class Event(
 enum class EventsType {
     @SerializedName("OFFLINE")
     OFFLINE,
+
     @SerializedName("ONLINE")
     ONLINE,
 }

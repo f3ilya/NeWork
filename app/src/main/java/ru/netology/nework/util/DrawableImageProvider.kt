@@ -1,8 +1,8 @@
 package ru.netology.nework.util
 
 import android.content.Context
-import androidx.annotation.DrawableRes
 import androidx.annotation.ColorInt
+import androidx.annotation.DrawableRes
 import com.yandex.runtime.image.ImageProvider
 import ru.netology.nework.extensions.getBitmapFromVectorDrawable
 

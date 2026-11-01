@@ -18,9 +18,9 @@
             android:layout_height="0dp"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             tools:visibility="visible">
 
             <androidx.recyclerview.widget.RecyclerView
@@ -47,9 +47,9 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:visibility="gone"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="24dp"
+            android:visibility="gone">
 
             <TextView
                 android:id="@+id/errorText"
@@ -62,11 +62,11 @@
 
             <Button
                 android:id="@+id/retryButton"
-                android:clickable="true"
-                android:focusable="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
+                android:clickable="true"
+                android:focusable="true"
                 android:text="@string/retry_loading" />
 
         </LinearLayout>
@@ -82,6 +82,7 @@
         android:clickable="true"
         android:contentDescription="@string/description_add_post"
         android:focusable="true"
+        android:visibility="visible"
         app:srcCompat="@drawable/ic_add_24" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

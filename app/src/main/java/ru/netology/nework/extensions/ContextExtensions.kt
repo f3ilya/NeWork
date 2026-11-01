@@ -40,10 +40,12 @@ fun Context.showConfirmationDialog(
         .setOnCancelListener { dialog ->
             dialog.dismiss()
         }
-        .apply { if (isNeed) this.setNeutralButton(neutral) { dialog, _ ->
-            onNeutral?.invoke()
-            dialog.dismiss()
-        } }
+        .apply {
+            if (isNeed) this.setNeutralButton(neutral) { dialog, _ ->
+                onNeutral?.invoke()
+                dialog.dismiss()
+            }
+        }
         .show()
 }
 

@@ -97,7 +97,7 @@ fun Fragment.registerImagePickerLauncher(
                 val uri: Uri? = result.data?.data
                 val file = uri?.toFile()
                 if (uri != null && file != null) {
-                    if (isFileTooLarge(uri)){
+                    if (isFileTooLarge(uri)) {
                         onError(LocalAppError("error_file_too_large"))
                     } else {
                         onSuccess(uri, file)

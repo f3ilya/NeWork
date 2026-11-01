@@ -1,7 +1,6 @@
 package ru.netology.nework.fragment.post
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
@@ -197,7 +196,6 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
     }
 
     private fun bindMentioned(users: List<UserResponse>) {
-        Log.d("MyDebugBind", users.toString())
         with(binding) {
             if (users.isNotEmpty()) {
                 mentioned.isVisible = true
@@ -212,9 +210,11 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
                     models = mentionModels,
                     moreButton = mentionedContainer.moreMentioned,
                     onAvatarClickListener = { userId ->
-//                    val action = NewPostFragmentDirections.actionNewPostFragmentToDetailedUsersListFragment(post.id)
-//                    findNavController().navigate(action)
-                        TODO()
+                        val action =
+                            NewPostFragmentDirections.actionNewPostFragmentToDetailedUserFragment(
+                                userId
+                            )
+                        findNavController().navigate(action)
                     },
                     onMoreClickListener = {
                         val action =

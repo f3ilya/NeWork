@@ -54,14 +54,14 @@ class UsersViewModel @Inject constructor(
         .catch { exception -> handleError(exception) }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(0, 0),
+            started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList()
         )
 
     init {
         viewModelScope.launch {
             runCatching {
-                repository.refresh()
+                repository.checkAndRefreshUsers(userIds)
             }.onFailure { exception ->
                 if (exception is CancellationException) throw exception
 

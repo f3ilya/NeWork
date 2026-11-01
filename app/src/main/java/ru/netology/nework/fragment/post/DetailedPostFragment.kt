@@ -181,9 +181,11 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
                 models = likeModels,
                 moreButton = moreLikes,
                 onAvatarClickListener = { userId ->
-//                    val action = DetailedPostFragmentDirections.actionDetailedPostFragmentToLikeOwnersFragment(post.id)
-//                    findNavController().navigate(action)
-                    TODO()
+                    val action =
+                        DetailedPostFragmentDirections.actionDetailedPostFragmentToDetailedUserFragment(
+                            userId
+                        )
+                    findNavController().navigate(action)
                 },
                 onMoreClickListener = {
                     val action =
@@ -208,9 +210,11 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
                     models = mentionModels,
                     moreButton = mentionedContainer.moreMentioned,
                     onAvatarClickListener = { userId ->
-//                    val action = DetailedPostFragmentDirections.actionDetailedPostFragmentToLikeOwnersFragment(post.id)
-//                    findNavController().navigate(action)
-                        TODO()
+                        val action =
+                            DetailedPostFragmentDirections.actionDetailedPostFragmentToDetailedUserFragment(
+                                userId
+                            )
+                        findNavController().navigate(action)
                     },
                     onMoreClickListener = {
                         val action =

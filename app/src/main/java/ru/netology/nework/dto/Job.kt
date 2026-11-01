@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 
 data class Job(
     @SerializedName("id")
-    val id: Int,
+    val id: Long,
     @SerializedName("name")
     val name: String,
     @SerializedName("position")
@@ -13,7 +13,9 @@ data class Job(
     @SerializedName("start")
     val start: String,
     @SerializedName("finish")
-    val finish: String,
+    val finish: String?,
     @SerializedName("link")
-    val link: String
+    val link: String?,
+    val ownerId: Long?,
+    val ownedByMe: Boolean = false
 )

@@ -1,7 +1,6 @@
 package ru.netology.nework.viewmodel.post
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -165,7 +164,6 @@ class NewPostViewModel @Inject constructor(
     }
 
     fun changeMentioned(ids: List<Long>) {
-        Log.d("MyDebugChangeMent", ids.toString())
         _editedPost.update { post ->
             post.copy(mentionIds = ids)
         }
@@ -197,7 +195,6 @@ class NewPostViewModel @Inject constructor(
     private fun clearEdited() {
         _editedPost.value = empty
         _media.value = noMedia
-        clearMap()
     }
 
     fun handleError(exception: Throwable) {

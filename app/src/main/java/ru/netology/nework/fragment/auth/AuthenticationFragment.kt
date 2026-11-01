@@ -32,8 +32,7 @@ class AuthenticationFragment : Fragment(R.layout.fragment_authentication) {
     }
 
     private fun setupListeners() {
-        with(binding)
-        {
+        with(binding) {
             etLogin.doAfterTextChanged { binding.tilLogin.error = null }
             etPassword.doAfterTextChanged { binding.tilPassword.error = null }
 

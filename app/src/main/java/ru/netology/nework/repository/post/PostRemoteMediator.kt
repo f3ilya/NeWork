@@ -31,9 +31,13 @@ class PostRemoteMediator @Inject constructor(
     ): MediatorResult {
         try {
             val response = when (loadType) {
-                LoadType.REFRESH -> { apiService.getLatestPosts(state.config.initialLoadSize) }
+                LoadType.REFRESH -> {
+                    apiService.getLatestPosts(state.config.initialLoadSize)
+                }
 
-                LoadType.PREPEND -> { return MediatorResult.Success(endOfPaginationReached = true) }
+                LoadType.PREPEND -> {
+                    return MediatorResult.Success(endOfPaginationReached = true)
+                }
 
                 LoadType.APPEND -> {
                     val id = postRemoteKeyDao.getBeforeKey() ?: return MediatorResult.Success(
@@ -50,7 +54,7 @@ class PostRemoteMediator @Inject constructor(
             appDb.withTransaction {
                 when (loadType) {
                     LoadType.REFRESH -> {
-                        if (isManualRefresh){
+                        if (isManualRefresh) {
                             postRemoteKeyDao.removeAll()
                             postDao.removeAll()
                             isManualRefresh = false

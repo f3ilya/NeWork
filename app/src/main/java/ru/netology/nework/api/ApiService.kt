@@ -18,6 +18,7 @@ import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 import ru.netology.nework.BuildConfig
+import ru.netology.nework.dto.Job
 import ru.netology.nework.dto.Media
 import ru.netology.nework.dto.Post
 import ru.netology.nework.dto.Token
@@ -97,4 +98,21 @@ interface ApiService {
 
     @GET("users")
     suspend fun getAllUsers(): Response<List<UserResponse>>
+
+    @GET("users/{id}")
+    suspend fun getUser(@Path("id") id: Long): Response<UserResponse>
+
+    /** === JOBS === **/
+
+    @GET("my/jobs")
+    suspend fun getMyJobs(): Response<List<Job>>
+
+    @GET("{id}/jobs")
+    suspend fun getUserJobs(@Path("id") id: Long): Response<List<Job>>
+
+    @POST("my/jobs")
+    suspend fun saveJob(@Body job: Job): Response<Job>
+
+    @DELETE("my/jobs/{id}")
+    suspend fun removeJob(@Path("id") id: Long): Response<Unit>
 }

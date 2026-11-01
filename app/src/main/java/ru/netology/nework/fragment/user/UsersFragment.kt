@@ -15,6 +15,7 @@ import dev.androidbroadcast.vbpd.viewBinding
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import ru.netology.nework.NavGraphDirections
 import ru.netology.nework.R
 import ru.netology.nework.adapter.UsersAdapter
 import ru.netology.nework.databinding.FragmentUsersBinding
@@ -42,7 +43,8 @@ class UsersFragment : Fragment(R.layout.fragment_users), OnSaveActionListener {
             if (isSelectedMode) {
                 viewModel.toggleUserSelection(id)
             } else {
-                TODO()
+                val action = NavGraphDirections.actionToDetailedUserFragment(id)
+                findNavController().navigate(action)
             }
         }
         binding.list.adapter = adapter

@@ -18,6 +18,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import ru.netology.nework.NavGraphDirections
 import ru.netology.nework.R
 import ru.netology.nework.auth.AppAuth
 import ru.netology.nework.databinding.ActivityAppBinding
@@ -25,6 +26,7 @@ import ru.netology.nework.extensions.load
 import ru.netology.nework.extensions.shareIntent
 import ru.netology.nework.extensions.showConfirmationDialog
 import ru.netology.nework.fragment.post.DetailedPostFragmentArgs
+import ru.netology.nework.fragment.user.DetailedUserFragmentArgs
 import ru.netology.nework.fragment.user.UsersFragmentArgs
 import ru.netology.nework.media.MediaPlaybackManager
 import ru.netology.nework.util.FragmentMode
@@ -98,6 +100,13 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                                 true
                             }
 
+                            R.id.profile -> {
+                                val userId = auth.authStateFlow.value.id
+                                val action = NavGraphDirections.actionToDetailedUserFragment(userId)
+                                navController.navigate(action)
+                                true
+                            }
+
                             R.id.signout -> {
                                 showConfirmationDialog(
                                     title = getString(R.string.exiting_the_app),
@@ -137,7 +146,7 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                         }
                     }
 
-                    R.id.newPostFragment, R.id.newEventFragment, R.id.mapFragment -> {
+                    R.id.newPostFragment, R.id.newEventFragment, R.id.mapFragment, R.id.newJobFragment -> {
                         hideBottomNavAndAvatar(bottomNavigation)
                         toolbar.inflateMenu(R.menu.menu_save)
                         toolbar.setOnMenuItemClickListener { item ->
@@ -175,10 +184,24 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                         }
                     }
 
+                    R.id.detailedUserFragment -> {
+                        hideBottomNavAndAvatar(bottomNavigation)
+                        val args = arguments?.let { DetailedUserFragmentArgs.fromBundle(it) }
+                        val isMyProfile = args?.userId == auth.authStateFlow.value.id
+                        toolbar.title = when {
+                            isMyProfile -> getString(R.string.you)
+                            else -> ""
+                        }
+                    }
+
                     else -> hideBottomNavAndAvatar(bottomNavigation)
                 }
             }
         }
+    }
+
+    fun setToolbarUserTitle(title: String, isMyProfile: Boolean) {
+        binding.toolbar.title = if (isMyProfile) getString(R.string.you) else title
     }
 
     private fun observes() {
@@ -213,7 +236,6 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                 .alpha(1f)
                 .setDuration(300)
                 .start()
-
         }
     }
 

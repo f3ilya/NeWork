@@ -5,6 +5,10 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/postsFragment">
 
+    <action
+        android:id="@+id/action_to_detailedUserFragment"
+        app:destination="@id/detailedUserFragment" />
+
     <!-- Главные экраны -->
 
     <fragment
@@ -51,9 +55,6 @@
         android:label="@string/app_name"
         tools:layout="@layout/fragment_users">
         <action
-            android:id="@+id/action_usersFragment_to_detailedUserFragment"
-            app:destination="@id/detailedUserFragment" />
-        <action
             android:id="@+id/action_usersFragment_to_authenticationFragment"
             app:destination="@id/authenticationFragment" />
         <action
@@ -74,6 +75,9 @@
         <action
             android:id="@+id/action_detailedEventFragment_to_detailedUsersListFragment"
             app:destination="@id/detailedUsersListFragment" />
+        <action
+            android:id="@+id/action_detailedEventFragment_to_detailedUserFragment"
+            app:destination="@id/detailedUserFragment" />
     </fragment>
 
     <fragment
@@ -97,19 +101,26 @@
         <action
             android:id="@+id/action_detailedPostFragment_to_detailedUsersListFragment"
             app:destination="@id/detailedUsersListFragment" />
+        <action
+            android:id="@+id/action_detailedPostFragment_to_detailedUserFragment"
+            app:destination="@id/detailedUserFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/detailedUserFragment"
         android:name="ru.netology.nework.fragment.user.DetailedUserFragment"
-        android:label="{userName}"
+        android:label="@string/user_profile"
         tools:layout="@layout/fragment_detailed_user">
         <argument
-            android:name="userName"
-            app:argType="string" />
+            android:name="userId"
+            app:argType="long"
+            android:defaultValue="0L" />
         <action
             android:id="@+id/action_detailedUserFragment_to_usersFragment"
             app:destination="@id/usersFragment" />
+        <action
+            android:id="@+id/action_detailedUserFragment_to_newJobFragment"
+            app:destination="@id/newJobFragment" />
     </fragment>
 
     <fragment
@@ -166,6 +177,9 @@
         <action
             android:id="@+id/action_newEventFragment_to_detailedUsersListFragment"
             app:destination="@id/detailedUsersListFragment" />
+        <action
+            android:id="@+id/action_newEventFragment_to_detailedUserFragment"
+            app:destination="@id/detailedUserFragment" />
     </fragment>
 
     <fragment
@@ -189,7 +203,16 @@
         <action
             android:id="@+id/action_newPostFragment_to_detailedUsersListFragment"
             app:destination="@id/detailedUsersListFragment" />
+        <action
+            android:id="@+id/action_newPostFragment_to_detailedUserFragment"
+            app:destination="@id/detailedUserFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/newJobFragment"
+        android:name="ru.netology.nework.fragment.user.NewJobFragment"
+        android:label="AddJobFragment"
+        tools:layout="@layout/fragment_new_job"/>
 
     <!-- Экран создания метки на карте -->
 

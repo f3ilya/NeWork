@@ -10,7 +10,7 @@
     <string name="retry_loading">Retry</string>
     <string name="error_network">There is no internet connection. Check the network.</string>
     <string name="error_db">Database error. Please try again later.</string>
-    <string name="error_unknown">An unknown error has occurred.</string>
+    <string name="error_unknown">Something went wrong. Try again later.</string>
     <string name="incorrect_login_or_password">Incorrect login or password.</string>
     <string name="log_in_to_your_account">log in to your account</string>
     <string name="login">Login</string>
@@ -83,4 +83,24 @@
     <string name="participants">Participants</string>
     <string name="select_users">Select users</string>
     <string name="user_not_found">User not found.</string>
+    <string name="user_profile">User profile</string>
+    <string name="date_to_present">%1$s – Present</string>
+    <string name="date_range">%1$s – %2$s</string>
+    <string name="profile">Profile</string>
+    <string name="name_job">Name</string>
+    <string name="position_job">Position</string>
+    <string name="link_job">Link</string>
+    <string name="select_a_date">Select a date</string>
+    <string name="name_cannot_be_empty_job">Name cannot be empty</string>
+    <string name="position_cannot_be_empty_job">Position cannot be empty</string>
+    <string name="incorrect_link_format_job">Incorrect link format</string>
+    <string name="start_date_cannot_be_empty">Start date cannot be empty</string>
+    <string name="create">Create</string>
+    <string name="end_date_job">End Date</string>
+    <string name="start_date_job">Start Date</string>
+    <string name="present">Present</string>
+    <string name="start_date_cannot_be_after_end_date">Start date cannot be after end date</string>
+    <string name="you">You</string>
+    <string name="wall">Wall</string>
+    <string name="jobs">Jobs</string>
 </resources>

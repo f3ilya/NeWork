@@ -12,8 +12,10 @@ data class Attachment(
 enum class AttachmentType {
     @SerializedName("IMAGE")
     IMAGE,
+
     @SerializedName("VIDEO")
     VIDEO,
+
     @SerializedName("AUDIO")
     AUDIO,
 }

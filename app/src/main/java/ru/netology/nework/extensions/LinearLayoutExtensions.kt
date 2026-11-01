@@ -1,7 +1,6 @@
 package ru.netology.nework.extensions
 
 import android.util.TypedValue
-import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible

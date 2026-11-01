@@ -48,8 +48,7 @@ class RegViewModel @Inject constructor(
             }.onFailure { exception ->
                 if (exception is CancellationException) throw exception
 
-                val error = AppError.from(exception)
-                _state.value = AppModelState(error = true, errorMessage = error.code)
+                handleError(exception)
             }
         }
     }

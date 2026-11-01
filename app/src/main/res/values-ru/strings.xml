@@ -4,7 +4,7 @@
     <string name="retry_loading">Обновить</string>
     <string name="error_network">Отсутствует интернет-соединение. Проверьте сеть.</string>
     <string name="error_db">Ошибка базы данных. Попробуйте позже.</string>
-    <string name="error_unknown">Произошла неизвестная ошибка.</string>
+    <string name="error_unknown">Что-то пошло не так. Попробуйте позже.</string>
     <string name="incorrect_login_or_password">Неверный логин или пароль.</string>
     <string name="description_post_author_avatar">Аватар автора поста</string>
     <string name="description_post_menu">Меню поста</string>
@@ -84,4 +84,24 @@
     <string name="participants">Участники</string>
     <string name="select_users">Выбрать пользователей</string>
     <string name="user_not_found">Пользователь не найден.</string>
+    <string name="user_profile">Профиль пользователя</string>
+    <string name="date_to_present">%1$s – НВ</string>
+    <string name="date_range">%1$s – %2$s</string>
+    <string name="profile">Профиль</string>
+    <string name="name_job">Название компании</string>
+    <string name="position_job">Должность</string>
+    <string name="link_job">Ссылка</string>
+    <string name="select_a_date">Выберите дату</string>
+    <string name="name_cannot_be_empty_job">Название не должно быть пустым</string>
+    <string name="position_cannot_be_empty_job">Должность не должна быть пустой</string>
+    <string name="incorrect_link_format_job">Неверный формат ссылки</string>
+    <string name="start_date_cannot_be_empty">Дата начала не может быть пустой</string>
+    <string name="create">Создать</string>
+    <string name="end_date_job">Дата окончания</string>
+    <string name="start_date_job">Дата начала</string>
+    <string name="present">НВ</string>
+    <string name="start_date_cannot_be_after_end_date">Дата начала не может быть позже окончания</string>
+    <string name="you">Вы</string>
+    <string name="wall">Стена</string>
+    <string name="jobs">Работы</string>
 </resources>

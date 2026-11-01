@@ -36,4 +36,9 @@
         <item name="android:statusBarColor">@color/black</item>
     </style>
 
+    <style name="ThemeOverlay.App.DatePicker.Modal" parent="ThemeOverlay.Material3.MaterialCalendar">
+        <item name="android:windowFullscreen">false</item>
+        <item name="materialCalendarStyle">@style/Widget.MaterialComponents.MaterialCalendar</item>
+    </style>
+
 </resources>

@@ -105,4 +105,9 @@
     <string name="wall">Стена</string>
     <string name="jobs">Работы</string>
     <string name="new_job">Новая работа</string>
+    <string name="empty_posts">Лента пуста. Будьте первыми!</string>
+    <string name="empty_profile_posts_owner">Здесь будут ваши посты.</string>
+    <string name="empty_profile_posts_guest">У пользователя пока нет постов.</string>
+    <string name="empty_profile_jobs_owner">Добавьте ваше место работы.</string>
+    <string name="empty_profile_jobs_guest">Опыт работы не указан.</string>
 </resources>

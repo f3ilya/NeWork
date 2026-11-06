@@ -28,12 +28,15 @@ class PostsViewModel @Inject constructor(
     private val repository: PostRepository,
     appAuth: AppAuth
 ) : ViewModel() {
+    private val cachedPosts: Flow<PagingData<Post>> = repository
+        .getPostPagingData()
+        .cachedIn(viewModelScope)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val data: Flow<PagingData<Post>> = appAuth.authStateFlow
         .flatMapLatest { authState ->
             val myId = authState.id
-            repository.getPostPagingData().map { pagingData ->
+            cachedPosts.map { pagingData ->
                 pagingData.map { post ->
                     post.copy(
                         ownedByMe = post.authorId == myId,
@@ -46,8 +49,6 @@ class PostsViewModel @Inject constructor(
     val authState: StateFlow<AuthState> = appAuth.authStateFlow
     private val _state = MutableStateFlow(AppModelState())
     val state: StateFlow<AppModelState> = _state.asStateFlow()
-
-    var isInitialLoad = true
 
     fun removePost(id: Long) {
         viewModelScope.launch {

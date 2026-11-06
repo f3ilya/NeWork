@@ -13,9 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.netology.nework.dto.UserResponse
 import ru.netology.nework.error.AppError
@@ -49,8 +48,6 @@ class UsersViewModel @Inject constructor(
                 repository.getUsersByIds(userIds)
             }
         }
-        .onStart { _state.value = AppModelState(loading = true) }
-        .onEach { resetState() }
         .catch { exception -> handleError(exception) }
         .stateIn(
             scope = viewModelScope,
@@ -59,9 +56,20 @@ class UsersViewModel @Inject constructor(
         )
 
     init {
+        refresh()
+    }
+
+    fun refresh(isRefreshing: Boolean = false) {
+        _state.value = if (isRefreshing) {
+            AppModelState(refreshing = true)
+        } else {
+            AppModelState(loading = true)
+        }
         viewModelScope.launch {
             runCatching {
                 repository.checkAndRefreshUsers(userIds)
+            }.onSuccess {
+                resetState()
             }.onFailure { exception ->
                 if (exception is CancellationException) throw exception
 
@@ -77,6 +85,12 @@ class UsersViewModel @Inject constructor(
 
     fun resetState() {
         _state.value = AppModelState()
+    }
+
+    fun clearErrorMessage() {
+        _state.update { state ->
+            state.copy(errorMessage = null)
+        }
     }
 
     fun handleError(exception: Throwable) {

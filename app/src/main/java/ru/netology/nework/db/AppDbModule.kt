@@ -7,7 +7,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import ru.netology.nework.dao.CacheTimeoutDao
 import ru.netology.nework.dao.post.PostDao
 import ru.netology.nework.dao.post.PostRemoteKeyDao
 import ru.netology.nework.dao.user.JobDao
@@ -40,7 +39,4 @@ object AppDbModule {
 
     @Provides
     fun providePostRemoteKeyDao(db: AppDb): PostRemoteKeyDao = db.postRemoteKeyDao()
-
-    @Provides
-    fun provideCacheTimeOutDao(db: AppDb): CacheTimeoutDao = db.cacheTimeoutDao()
 }

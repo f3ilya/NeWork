@@ -10,9 +10,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.netology.nework.dto.Job
 import ru.netology.nework.error.AppError
@@ -33,8 +32,6 @@ class JobsViewModel @Inject constructor(
     val state: StateFlow<AppModelState> = _state.asStateFlow()
 
     val jobs: StateFlow<List<Job>> = repository.getJobsByOwnerId(userId)
-        .onStart { _state.value = AppModelState(loading = true) }
-        .onEach { resetState() }
         .catch { exception -> handleError(exception) }
         .stateIn(
             scope = viewModelScope,
@@ -43,9 +40,20 @@ class JobsViewModel @Inject constructor(
         )
 
     init {
+        refresh()
+    }
+
+    fun refresh(isRefreshing: Boolean = false) {
+        _state.value = if (isRefreshing) {
+            AppModelState(refreshing = true)
+        } else {
+            AppModelState(loading = true)
+        }
         viewModelScope.launch {
             runCatching {
                 repository.refreshJobs(userId)
+            }.onSuccess {
+                resetState()
             }.onFailure { exception ->
                 if (exception is CancellationException) throw exception
 
@@ -68,6 +76,12 @@ class JobsViewModel @Inject constructor(
 
     fun resetState() {
         _state.value = AppModelState()
+    }
+
+    fun clearErrorMessage() {
+        _state.update { state ->
+            state.copy(errorMessage = null)
+        }
     }
 
     fun handleError(exception: Throwable) {

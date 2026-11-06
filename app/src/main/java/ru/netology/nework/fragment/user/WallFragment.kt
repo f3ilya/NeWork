@@ -2,7 +2,9 @@ package ru.netology.nework.fragment.user
 
 import android.os.Bundle
 import android.view.View
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -46,10 +48,34 @@ class WallFragment : Fragment(R.layout.fragment_posts) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        bind()
         setupExoPlayer()
         setupAdapter()
         setupListeners()
         observeViewModel()
+    }
+
+    private fun bind() {
+        with(binding) {
+            fab.isVisible = false
+            val paddingInPx = resources.getDimensionPixelSize(R.dimen.common_spacing)
+            root.updatePadding(top = paddingInPx)
+            listOf(
+                placeholderContainer.emptyPlaceholder,
+                placeholderContainer.errorPlaceholder,
+                placeholderContainer.progress
+            ).forEach { placeholderView ->
+                placeholderView.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                    verticalBias = 0.3f
+                }
+            }
+            val textEmptyPlaceholder = if (viewModel.isMyProfile) {
+                R.string.empty_profile_posts_owner
+            } else {
+                R.string.empty_profile_posts_guest
+            }
+            placeholderContainer.emptyPlaceholder.setText(textEmptyPlaceholder)
+        }
     }
 
     private fun setupExoPlayer() {
@@ -60,9 +86,6 @@ class WallFragment : Fragment(R.layout.fragment_posts) {
     }
 
     private fun setupAdapter() {
-        binding.fab.isVisible = false
-        val paddingInPx = resources.getDimensionPixelSize(R.dimen.common_spacing)
-        binding.root.updatePadding(top = paddingInPx)
         adapter = PostsAdapter(playbackManager, object : OnInteractionListener {
             override fun onLike(post: Post) {
                 viewModel.likePost(post.id, post.likedByMe)
@@ -106,7 +129,7 @@ class WallFragment : Fragment(R.layout.fragment_posts) {
         with(binding) {
             swipeRefresh.setOnRefreshListener(adapter::refresh)
 
-            retryButton.setOnClickListener { adapter.retry() }
+            placeholderContainer.retryButton.setOnClickListener { adapter.retry() }
         }
     }
 
@@ -118,29 +141,31 @@ class WallFragment : Fragment(R.layout.fragment_posts) {
                 launch {
                     adapter.loadStateFlow.collectLatest { states ->
                         with(binding) {
-                            val isRefreshing = states.refresh is LoadState.Loading
-                            swipeRefresh.isRefreshing = isRefreshing
+                            swipeRefresh.isRefreshing = states.refresh is LoadState.Loading ||
+                                    states.mediator?.refresh is LoadState.Loading
 
                             val refreshError = states.mediator?.refresh as? LoadState.Error
                                 ?: states.source.refresh as? LoadState.Error
                             val isListEmpty = adapter.itemCount == 0
                             val showErrorPlaceholder = refreshError != null && isListEmpty
+                            val isRefreshFinished = states.source.refresh is LoadState.NotLoading &&
+                                    (states.mediator == null || states.mediator?.refresh is LoadState.NotLoading) &&
+                                    states.append.endOfPaginationReached
                             val showEmptyPlaceholder =
-                                isListEmpty && !isRefreshing && !showErrorPlaceholder
+                                isListEmpty && isRefreshFinished && !showErrorPlaceholder
+                            val showProgress =
+                                !isRefreshFinished && isListEmpty && !showErrorPlaceholder
+                            val showPlaceholders =
+                                showErrorPlaceholder || showEmptyPlaceholder || showProgress
 
-                            errorPlaceholder.isVisible = showErrorPlaceholder
-                            emptyPlaceholder.isVisible = showEmptyPlaceholder
-                            list.isVisible = !showErrorPlaceholder && !showEmptyPlaceholder
-                            progress.isVisible =
-                                isRefreshing && isListEmpty && !showErrorPlaceholder
+                            list.isVisible = !showPlaceholders
+                            placeholderContainer.scroll.isVisible = showPlaceholders
+                            placeholderContainer.errorPlaceholder.isVisible = showErrorPlaceholder
+                            placeholderContainer.emptyPlaceholder.isVisible = showEmptyPlaceholder
+                            placeholderContainer.progress.isVisible = showProgress
 
-                            if (showErrorPlaceholder) {
+                            if (refreshError != null) {
                                 viewModel.handleError(refreshError.error)
-                            }
-
-                            if (viewModel.isInitialLoad && !isListEmpty) {
-                                viewModel.isInitialLoad = false
-                                list.scrollToPosition(0)
                             }
                         }
                     }
@@ -148,8 +173,6 @@ class WallFragment : Fragment(R.layout.fragment_posts) {
 
                 launch {
                     viewModel.state.collectLatest { state ->
-                        binding.progress.isVisible = state.loading && adapter.itemCount == 0
-
                         if (state.error && state.errorMessage != null) {
                             parentViewModel.changeError(state.errorMessage)
                             viewModel.resetState()

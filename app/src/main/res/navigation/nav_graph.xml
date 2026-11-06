@@ -113,8 +113,8 @@
         tools:layout="@layout/fragment_detailed_user">
         <argument
             android:name="userId"
-            app:argType="long"
-            android:defaultValue="0L" />
+            android:defaultValue="0L"
+            app:argType="long" />
         <action
             android:id="@+id/action_detailedUserFragment_to_usersFragment"
             app:destination="@id/usersFragment" />
@@ -211,8 +211,8 @@
     <fragment
         android:id="@+id/newJobFragment"
         android:name="ru.netology.nework.fragment.user.NewJobFragment"
-        android:label="AddJobFragment"
-        tools:layout="@layout/fragment_new_job"/>
+        android:label="@string/new_job"
+        tools:layout="@layout/fragment_new_job" />
 
     <!-- Экран создания метки на карте -->
 
@@ -227,6 +227,33 @@
         <action
             android:id="@+id/action_mapFragment_to_newEventFragment"
             app:destination="@id/newEventFragment" />
+    </fragment>
+
+    <!-- Вложенные экраны детального просмотра пользователя -->
+
+    <fragment
+        android:id="@+id/jobsFragment"
+        android:name="ru.netology.nework.fragment.user.JobsFragment"
+        android:label="fragment_jobs"
+        tools:layout="@layout/fragment_jobs">
+        <argument
+            android:name="userId"
+            app:argType="long" />
+        <argument
+            android:name="isMyProfile"
+            app:argType="boolean" />
+    </fragment>
+    <fragment
+        android:id="@+id/wallFragment"
+        android:name="ru.netology.nework.fragment.user.WallFragment"
+        android:label="WallFragment"
+        tools:layout="@layout/fragment_posts">
+        <argument
+            android:name="userId"
+            app:argType="long" />
+        <argument
+            android:name="isMyProfile"
+            app:argType="boolean" />
     </fragment>
 
 </navigation>

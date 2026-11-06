@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ru.netology.nework.dto.Job
 import ru.netology.nework.error.AppError
+import ru.netology.nework.fragment.user.JobsFragmentArgs
 import ru.netology.nework.model.AppModelState
 import ru.netology.nework.repository.user.UserRepository
 import javax.inject.Inject
@@ -25,7 +26,9 @@ class JobsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: UserRepository,
 ) : ViewModel() {
-    private val userId: Long = checkNotNull(savedStateHandle["userId"])
+    private val args = JobsFragmentArgs.fromSavedStateHandle(savedStateHandle)
+    private val userId = args.userId
+    val isMyProfile = args.isMyProfile
     private val _state = MutableStateFlow(AppModelState())
     val state: StateFlow<AppModelState> = _state.asStateFlow()
 

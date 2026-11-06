@@ -61,6 +61,10 @@ class DetailedUserViewModel @Inject constructor(
         _state.value = AppModelState()
     }
 
+    fun changeError(errorMessage: String) {
+        _state.value = AppModelState(error = true, errorMessage = errorMessage)
+    }
+
     fun handleError(exception: Throwable) {
         val error = AppError.from(exception)
         _state.value = AppModelState(error = true, errorMessage = error.code)

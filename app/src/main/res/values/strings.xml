@@ -103,4 +103,5 @@
     <string name="you">You</string>
     <string name="wall">Wall</string>
     <string name="jobs">Jobs</string>
+    <string name="new_job">New job</string>
 </resources>

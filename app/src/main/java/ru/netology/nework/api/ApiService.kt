@@ -115,4 +115,54 @@ interface ApiService {
 
     @DELETE("my/jobs/{id}")
     suspend fun removeJob(@Path("id") id: Long): Response<Unit>
+
+    /** === WALL === **/
+
+    @GET("{authorId}/wall/{id}/before")
+    suspend fun getBeforeAuthorWall(
+        @Path("authorId") authorId: Long,
+        @Path("id") id: Long,
+        @Query("count") count: Int,
+    ): Response<List<Post>>
+
+    @GET("{authorId}/wall/latest")
+    suspend fun getLatestAuthorWall(
+        @Path("authorId") authorId: Long,
+        @Query("count") count: Int,
+    ): Response<List<Post>>
+
+    @POST("{authorId}/wall/{id}/likes")
+    suspend fun likeAuthorWall(
+        @Path("authorId") authorId: Long,
+        @Path("id") id: Long,
+    ): Response<Post>
+
+    @DELETE("{authorId}/wall/{id}/likes")
+    suspend fun dislikeAuthorWall(
+        @Path("authorId") authorId: Long,
+        @Path("id") id: Long,
+    ): Response<Post>
+
+    /** === MY WALL === **/
+
+    @GET("my/wall/{id}/before")
+    suspend fun getBeforeMyWall(
+        @Path("id") id: Long,
+        @Query("count") count: Int,
+    ): Response<List<Post>>
+
+    @GET("my/wall/latest")
+    suspend fun getLatestMyWall(
+        @Query("count") count: Int,
+    ): Response<List<Post>>
+
+    @POST("my/wall/{id}/likes")
+    suspend fun likeMyWall(
+        @Path("id") id: Long,
+    ): Response<Post>
+
+    @DELETE("my/wall/{id}/likes")
+    suspend fun dislikeMyWall(
+        @Path("id") id: Long,
+    ): Response<Post>
 }

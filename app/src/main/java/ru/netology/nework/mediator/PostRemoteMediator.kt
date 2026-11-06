@@ -1,4 +1,4 @@
-package ru.netology.nework.repository.post
+package ru.netology.nework.mediator
 
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
@@ -7,13 +7,16 @@ import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import kotlinx.coroutines.CancellationException
 import ru.netology.nework.api.ApiService
+import ru.netology.nework.dao.CacheTimeoutDao
 import ru.netology.nework.dao.post.PostDao
 import ru.netology.nework.dao.post.PostRemoteKeyDao
 import ru.netology.nework.db.AppDb
+import ru.netology.nework.entity.CacheTimeoutEntity
 import ru.netology.nework.entity.post.PostEntity
 import ru.netology.nework.entity.post.PostRemoteKeyEntity
 import ru.netology.nework.entity.post.toEntity
 import ru.netology.nework.extensions.getOrThrow
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @OptIn(ExperimentalPagingApi::class)
@@ -21,9 +24,18 @@ class PostRemoteMediator @Inject constructor(
     private val appDb: AppDb,
     private val postRemoteKeyDao: PostRemoteKeyDao,
     private val postDao: PostDao,
+    private val cacheTimeoutDao: CacheTimeoutDao,
     private val apiService: ApiService,
 ) : RemoteMediator<Int, PostEntity>() {
-    var isManualRefresh: Boolean = false
+    override suspend fun initialize(): InitializeAction {
+        val cacheTimeout = TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS)
+        val lastUpdated = cacheTimeoutDao.getPostsLastUpdated() ?: 0L
+        return if (System.currentTimeMillis() - lastUpdated <= cacheTimeout) {
+            InitializeAction.SKIP_INITIAL_REFRESH
+        } else {
+            InitializeAction.LAUNCH_INITIAL_REFRESH
+        }
+    }
 
     override suspend fun load(
         loadType: LoadType,
@@ -54,11 +66,8 @@ class PostRemoteMediator @Inject constructor(
             appDb.withTransaction {
                 when (loadType) {
                     LoadType.REFRESH -> {
-                        if (isManualRefresh) {
-                            postRemoteKeyDao.removeAll()
-                            postDao.removeAll()
-                            isManualRefresh = false
-                        }
+                        postRemoteKeyDao.removeAll()
+                        postDao.removeAll()
                         postRemoteKeyDao.insert(
                             listOf(
                                 PostRemoteKeyEntity(
@@ -69,6 +78,12 @@ class PostRemoteMediator @Inject constructor(
                                     type = PostRemoteKeyEntity.KeyType.BEFORE,
                                     id = body.last().id
                                 ),
+                            )
+                        )
+                        cacheTimeoutDao.saveLastUpdated(
+                            CacheTimeoutEntity(
+                                type = CacheTimeoutEntity.Type.POSTS,
+                                lastUpdated = System.currentTimeMillis()
                             )
                         )
                     }
@@ -92,9 +107,5 @@ class PostRemoteMediator @Inject constructor(
 
             return MediatorResult.Error(exception)
         }
-    }
-
-    override suspend fun initialize(): InitializeAction {
-        return InitializeAction.SKIP_INITIAL_REFRESH
     }
 }

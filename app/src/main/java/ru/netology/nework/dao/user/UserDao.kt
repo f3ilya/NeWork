@@ -1,18 +1,17 @@
 package ru.netology.nework.dao.user
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 import ru.netology.nework.entity.user.UserEntity
 
 @Dao
 interface UserDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insert(userEntity: UserEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insert(userEntity: List<UserEntity>)
 
     @Query("SELECT * FROM UserEntity ORDER BY id DESC")

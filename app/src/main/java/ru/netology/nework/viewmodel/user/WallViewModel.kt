@@ -48,8 +48,6 @@ class WallViewModel @Inject constructor(
     private val _state = MutableStateFlow(AppModelState())
     val state: StateFlow<AppModelState> = _state.asStateFlow()
 
-    var isInitialLoad = true
-
     fun likePost(postId: Long, likedByMe: Boolean) {
         viewModelScope.launch {
             runCatching {

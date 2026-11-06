@@ -104,4 +104,9 @@
     <string name="wall">Wall</string>
     <string name="jobs">Jobs</string>
     <string name="new_job">New job</string>
+    <string name="empty_posts">The feed is empty. Be the first to post!</string>
+    <string name="empty_profile_posts_owner">Your posts will appear here.</string>
+    <string name="empty_profile_posts_guest">The user doesn’t have any posts yet.</string>
+    <string name="empty_profile_jobs_owner">Add your work experience.</string>
+    <string name="empty_profile_jobs_guest">No work experience added yet.</string>
 </resources>

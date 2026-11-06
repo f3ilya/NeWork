@@ -32,10 +32,6 @@ class WallRemoteMediator @AssistedInject constructor(
         fun create(authorId: Long, isMyProfile: Boolean): WallRemoteMediator
     }
 
-    override suspend fun initialize(): InitializeAction {
-        return InitializeAction.LAUNCH_INITIAL_REFRESH
-    }
-
     override suspend fun load(
         loadType: LoadType,
         state: PagingState<Int, PostEntity>

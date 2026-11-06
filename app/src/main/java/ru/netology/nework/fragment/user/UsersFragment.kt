@@ -19,6 +19,7 @@ import ru.netology.nework.NavGraphDirections
 import ru.netology.nework.R
 import ru.netology.nework.adapter.UsersAdapter
 import ru.netology.nework.databinding.FragmentUsersBinding
+import ru.netology.nework.model.AppModelState
 import ru.netology.nework.model.UserModel
 import ru.netology.nework.util.FragmentMode
 import ru.netology.nework.util.OnSaveActionListener
@@ -34,6 +35,7 @@ class UsersFragment : Fragment(R.layout.fragment_users), OnSaveActionListener {
         super.onViewCreated(view, savedInstanceState)
 
         setupAdapter()
+        setupListeners()
         observeViewModel()
     }
 
@@ -50,6 +52,18 @@ class UsersFragment : Fragment(R.layout.fragment_users), OnSaveActionListener {
         binding.list.adapter = adapter
     }
 
+    private fun setupListeners() {
+        with(binding) {
+            swipeRefresh.setOnRefreshListener {
+                viewModel.refresh(true)
+            }
+
+            placeholderContainer.retryButton.setOnClickListener {
+                viewModel.refresh()
+            }
+        }
+    }
+
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -61,21 +75,41 @@ class UsersFragment : Fragment(R.layout.fragment_users), OnSaveActionListener {
                                 isSelected = selectedId.contains(userResponse.id)
                             )
                         }
-                    }.collectLatest { models -> adapter.submitList(models) }
+                    }.collectLatest { models ->
+                        adapter.submitList(models) {
+                            updatePlaceholders(
+                                viewModel.state.value
+                            )
+                        }
+                    }
                 }
 
                 launch {
                     viewModel.state.collectLatest { state ->
-                        binding.progress.isVisible = state.loading
-                        binding.list.isVisible = !state.loading
+                        updatePlaceholders(state)
 
                         if (state.error && state.errorMessage != null) {
                             error(state.errorMessage)
-                            viewModel.resetState()
+                            viewModel.clearErrorMessage()
                         }
                     }
                 }
             }
+        }
+    }
+
+    private fun updatePlaceholders(state: AppModelState) {
+        with(binding) {
+            swipeRefresh.isRefreshing = state.refreshing
+            val isListEmpty = adapter.itemCount == 0
+            val showErrorPlaceholder = state.error && isListEmpty
+            val showProgress = state.loading && isListEmpty && !showErrorPlaceholder
+            val showPlaceholders = showProgress || showErrorPlaceholder
+
+            placeholderContainer.scroll.isVisible = showPlaceholders
+            list.isVisible = !showPlaceholders
+            placeholderContainer.errorPlaceholder.isVisible = showErrorPlaceholder
+            placeholderContainer.progress.isVisible = showProgress
         }
     }
 

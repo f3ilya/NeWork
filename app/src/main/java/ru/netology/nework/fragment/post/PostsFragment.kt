@@ -104,22 +104,24 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
     }
 
     private fun setupListeners() {
-        binding.swipeRefresh.setOnRefreshListener {
-            adapter.refresh()
-        }
-
-        binding.fab.setOnClickListener {
-            if (viewModel.authState.value.token.isNullOrEmpty()) {
-                authorizationIsRequired {
-                    findNavController().navigate(R.id.action_postsFragment_to_authenticationFragment)
-                }
-            } else {
-                findNavController().navigate(R.id.action_postsFragment_to_newPostFragment)
+        with(binding) {
+            swipeRefresh.setOnRefreshListener {
+                adapter.refresh()
             }
-        }
 
-        binding.retryButton.setOnClickListener {
-            adapter.retry()
+            fab.setOnClickListener {
+                if (viewModel.authState.value.token.isNullOrEmpty()) {
+                    authorizationIsRequired {
+                        findNavController().navigate(R.id.action_postsFragment_to_authenticationFragment)
+                    }
+                } else {
+                    findNavController().navigate(R.id.action_postsFragment_to_newPostFragment)
+                }
+            }
+
+            placeholderContainer.retryButton.setOnClickListener {
+                adapter.retry()
+            }
         }
     }
 
@@ -130,30 +132,32 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
 
                 launch {
                     adapter.loadStateFlow.collectLatest { states ->
-                        binding.apply {
-                            val isRefreshing = states.refresh is LoadState.Loading
-                            swipeRefresh.isRefreshing = isRefreshing
+                        with(binding) {
+                            swipeRefresh.isRefreshing = states.refresh is LoadState.Loading ||
+                                    states.mediator?.refresh is LoadState.Loading
 
                             val refreshError = states.mediator?.refresh as? LoadState.Error
                                 ?: states.source.refresh as? LoadState.Error
                             val isListEmpty = adapter.itemCount == 0
                             val showErrorPlaceholder = refreshError != null && isListEmpty
+                            val isRefreshFinished = states.source.refresh is LoadState.NotLoading &&
+                                    (states.mediator == null || states.mediator?.refresh is LoadState.NotLoading) &&
+                                    states.append.endOfPaginationReached
                             val showEmptyPlaceholder =
-                                isListEmpty && !isRefreshing && !showErrorPlaceholder
+                                isListEmpty && isRefreshFinished && !showErrorPlaceholder
+                            val showProgress =
+                                !isRefreshFinished && isListEmpty && !showErrorPlaceholder
+                            val showPlaceholders =
+                                showErrorPlaceholder || showEmptyPlaceholder || showProgress
 
-                            errorPlaceholder.isVisible = showErrorPlaceholder
-                            emptyPlaceholder.isVisible = showEmptyPlaceholder
-                            list.isVisible = !showErrorPlaceholder && !showEmptyPlaceholder
-                            progress.isVisible =
-                                isRefreshing && isListEmpty && !showErrorPlaceholder
+                            list.isVisible = !showPlaceholders
+                            placeholderContainer.scroll.isVisible = showPlaceholders
+                            placeholderContainer.errorPlaceholder.isVisible = showErrorPlaceholder
+                            placeholderContainer.emptyPlaceholder.isVisible = showEmptyPlaceholder
+                            placeholderContainer.progress.isVisible = showProgress
 
-                            if (showErrorPlaceholder) {
+                            if (refreshError != null) {
                                 viewModel.handleError(refreshError.error)
-                            }
-
-                            if (viewModel.isInitialLoad && !isListEmpty) {
-                                viewModel.isInitialLoad = false
-                                list.scrollToPosition(0)
                             }
                         }
                     }
@@ -161,8 +165,6 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
 
                 launch {
                     viewModel.state.collectLatest { state ->
-                        binding.progress.isVisible = state.loading && adapter.itemCount == 0
-
                         if (state.error && state.errorMessage != null) {
                             error(state.errorMessage)
                             viewModel.resetState()

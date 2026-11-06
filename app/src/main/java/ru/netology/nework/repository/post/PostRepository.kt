@@ -8,10 +8,9 @@ import ru.netology.nework.dto.UserResponse
 import java.io.File
 
 interface PostRepository {
-    val data: Flow<PagingData<Post>>
-    fun setManualRefresh(isManual: Boolean)
+    fun getPostPagingData(): Flow<PagingData<Post>>
     fun getUsersByIds(ids: List<Long>): Flow<List<UserResponse>>
-    suspend fun likePost(id: Long, likeByMe: Boolean)
+    suspend fun likePost(id: Long, likedByMe: Boolean)
     suspend fun getPostById(id: Long): Flow<Post>
     suspend fun savePost(post: Post)
     suspend fun saveMedia(file: File): Media

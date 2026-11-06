@@ -18,6 +18,7 @@ import ru.netology.nework.dto.UserResponse
 import ru.netology.nework.entity.post.PostEntity
 import ru.netology.nework.entity.user.toDto
 import ru.netology.nework.extensions.getOrThrow
+import ru.netology.nework.mediator.PostRemoteMediator
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -30,7 +31,7 @@ class PostRepositoryImpl @Inject constructor(
     private val mediator: PostRemoteMediator,
 ) : PostRepository {
     @OptIn(ExperimentalPagingApi::class)
-    override val data: Flow<PagingData<Post>> = Pager(
+    override fun getPostPagingData(): Flow<PagingData<Post>> = Pager(
         config = PagingConfig(pageSize = 10, enablePlaceholders = true, initialLoadSize = 10),
         remoteMediator = mediator,
         pagingSourceFactory = postDao::pagingSource,
@@ -38,17 +39,15 @@ class PostRepositoryImpl @Inject constructor(
         pagingData.map(PostEntity::toDto)
     }
 
-    override fun setManualRefresh(isManual: Boolean) {
-        mediator.isManualRefresh = true
-    }
-
-    override suspend fun likePost(id: Long, likeByMe: Boolean) {
-        val post = if (likeByMe) {
-            apiService.dislikePost(id).getOrThrow()
+    override suspend fun likePost(id: Long, likedByMe: Boolean) {
+        val response = if (likedByMe) {
+            apiService.dislikePost(id)
         } else {
-            apiService.likePost(id).getOrThrow()
+            apiService.likePost(id)
         }
-        postDao.insert(PostEntity.fromDto(post))
+        response.getOrThrow().let { post ->
+            postDao.insert(PostEntity.fromDto(post))
+        }
     }
 
     override suspend fun getPostById(id: Long): Flow<Post> =
@@ -56,8 +55,9 @@ class PostRepositoryImpl @Inject constructor(
 
     override suspend fun savePost(post: Post) {
         val response = apiService.savePost(post)
-        val body = response.getOrThrow()
-        postDao.insert(PostEntity.fromDto(body))
+        response.getOrThrow().let { post ->
+            postDao.insert(PostEntity.fromDto(post))
+        }
     }
 
     override suspend fun saveMedia(file: File): Media {

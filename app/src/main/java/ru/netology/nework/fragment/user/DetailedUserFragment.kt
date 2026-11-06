@@ -37,7 +37,11 @@ class DetailedUserFragment : Fragment(R.layout.fragment_detailed_user) {
 
     private fun setupAdapter() {
         with(binding) {
-            viewPager.adapter = DetailedUserAdapter(this@DetailedUserFragment, viewModel.userId)
+            viewPager.adapter = DetailedUserAdapter(
+                this@DetailedUserFragment,
+                viewModel.userId,
+                viewModel.isMyProfile
+            )
             TabLayoutMediator(tabLayout, viewPager) { tab, pos ->
                 tab.text = if (pos == 0) getString(R.string.wall) else getString(R.string.jobs)
             }.attach()
@@ -117,9 +121,11 @@ class DetailedUserFragment : Fragment(R.layout.fragment_detailed_user) {
 
     private fun error(error: String) {
         val messageResId = when (error) {
+            "error_playback" -> R.string.error_playback
             "error_network" -> R.string.error_network
             "error_db" -> R.string.error_db
             "403" -> R.string.authorization_is_required_for_this_action
+            "404" -> R.string.post_not_found
             else -> R.string.error_unknown
         }
 

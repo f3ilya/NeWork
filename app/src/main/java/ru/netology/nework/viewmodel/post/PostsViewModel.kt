@@ -28,19 +28,20 @@ class PostsViewModel @Inject constructor(
     private val repository: PostRepository,
     appAuth: AppAuth
 ) : ViewModel() {
-    private val cached: Flow<PagingData<Post>> = repository.data
-        .cachedIn(viewModelScope)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val data: Flow<PagingData<Post>> = appAuth.authStateFlow
-        .flatMapLatest { (myId) ->
-            cached.map { pagingData ->
+        .flatMapLatest { authState ->
+            val myId = authState.id
+            repository.getPostPagingData().map { pagingData ->
                 pagingData.map { post ->
-                    post.copy(ownedByMe = post.authorId == myId)
+                    post.copy(
+                        ownedByMe = post.authorId == myId,
+                        likedByMe = myId in post.likeOwnerIds
+                    )
                 }
             }
-        }
-        .cachedIn(viewModelScope)
+        }.cachedIn(viewModelScope)
 
     val authState: StateFlow<AuthState> = appAuth.authStateFlow
     private val _state = MutableStateFlow(AppModelState())
@@ -58,10 +59,6 @@ class PostsViewModel @Inject constructor(
                 handleError(exception)
             }
         }
-    }
-
-    fun manualRefresh() {
-        repository.setManualRefresh(true)
     }
 
     fun likePost(id: Long, likeByMe: Boolean) {

@@ -10,7 +10,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.paging.LoadState
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
@@ -36,7 +35,6 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
     private val binding by viewBinding(FragmentPostsBinding::bind)
     private val viewModel: PostsViewModel by viewModels()
     private lateinit var adapter: PostsAdapter
-    private var isManualScrollNeeded = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -45,7 +43,6 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
         setupAdapter()
         setupListeners()
         observeViewModel()
-        observeAdapter()
     }
 
     private fun setupExoPlayer() {
@@ -108,9 +105,7 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
 
     private fun setupListeners() {
         binding.swipeRefresh.setOnRefreshListener {
-            viewModel.manualRefresh()
             adapter.refresh()
-            isManualScrollNeeded = true
         }
 
         binding.fab.setOnClickListener {
@@ -133,8 +128,6 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { viewModel.data.collectLatest(adapter::submitData) }
 
-                launch { viewModel.authState.collectLatest { adapter.refresh() } }
-
                 launch {
                     adapter.loadStateFlow.collectLatest { states ->
                         binding.apply {
@@ -145,23 +138,23 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
                                 ?: states.source.refresh as? LoadState.Error
                             val isListEmpty = adapter.itemCount == 0
                             val showErrorPlaceholder = refreshError != null && isListEmpty
+                            val showEmptyPlaceholder =
+                                isListEmpty && !isRefreshing && !showErrorPlaceholder
 
                             errorPlaceholder.isVisible = showErrorPlaceholder
-                            list.isVisible = !showErrorPlaceholder
+                            emptyPlaceholder.isVisible = showEmptyPlaceholder
+                            list.isVisible = !showErrorPlaceholder && !showEmptyPlaceholder
+                            progress.isVisible =
+                                isRefreshing && isListEmpty && !showErrorPlaceholder
 
                             if (showErrorPlaceholder) {
                                 viewModel.handleError(refreshError.error)
-                            } else if (states.refresh is LoadState.NotLoading && !isListEmpty) {
-                                viewModel.resetState()
                             }
 
                             if (viewModel.isInitialLoad && !isListEmpty) {
                                 viewModel.isInitialLoad = false
                                 list.scrollToPosition(0)
                             }
-
-                            progress.isVisible =
-                                isRefreshing && isListEmpty && !showErrorPlaceholder
                         }
                     }
                 }
@@ -178,19 +171,6 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
                 }
             }
         }
-    }
-
-    private fun observeAdapter() {
-        adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
-            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-                if (positionStart == 0 && isManualScrollNeeded) {
-                    isManualScrollNeeded = false
-                    binding.list.post {
-                        binding.list.smoothScrollToPosition(0)
-                    }
-                }
-            }
-        })
     }
 
     private fun error(error: String) {

@@ -7,7 +7,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
 import kotlinx.coroutines.flow.collectLatest
@@ -21,9 +20,8 @@ import ru.netology.nework.viewmodel.user.JobsViewModel
 @AndroidEntryPoint
 class JobsFragment : Fragment(R.layout.fragment_jobs) {
     companion object {
-        private const val ARG_USER_ID = "userId"
-        fun newInstance(userId: Long) = JobsFragment().apply {
-            arguments = Bundle().apply { putLong(ARG_USER_ID, userId) }
+        fun newInstance(userId: Long, isMyProfile: Boolean) = JobsFragment().apply {
+            arguments = JobsFragmentArgs(userId, isMyProfile).toBundle()
         }
     }
 
@@ -40,7 +38,7 @@ class JobsFragment : Fragment(R.layout.fragment_jobs) {
     }
 
     private fun setupAdapter() {
-        adapter = JobsAdapter(parentViewModel.isMyProfile) { jobId ->
+        adapter = JobsAdapter(viewModel.isMyProfile) { jobId ->
             viewModel.removeJob(jobId)
         }
         binding.list.adapter = adapter
@@ -54,27 +52,12 @@ class JobsFragment : Fragment(R.layout.fragment_jobs) {
                 launch {
                     viewModel.state.collectLatest { state ->
                         if (state.error && state.errorMessage != null) {
-                            error(state.errorMessage)
+                            parentViewModel.changeError(state.errorMessage)
                             viewModel.resetState()
                         }
                     }
                 }
             }
         }
-    }
-
-    private fun error(error: String) {
-        val messageResId = when (error) {
-            "error_network" -> R.string.error_network
-            "error_db" -> R.string.error_db
-            "403" -> R.string.authorization_is_required_for_this_action
-            else -> R.string.error_unknown
-        }
-
-        Snackbar.make(
-            binding.root,
-            getString(messageResId),
-            Snackbar.LENGTH_LONG
-        ).show()
     }
 }

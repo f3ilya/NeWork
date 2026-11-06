@@ -7,6 +7,12 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import ru.netology.nework.dao.CacheTimeoutDao
+import ru.netology.nework.dao.post.PostDao
+import ru.netology.nework.dao.post.PostRemoteKeyDao
+import ru.netology.nework.dao.user.JobDao
+import ru.netology.nework.dao.user.UserDao
+import ru.netology.nework.dao.user.WallRemoteKeyDao
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
@@ -19,4 +25,22 @@ object AppDbModule {
             .fallbackToDestructiveMigration(true)
             .build()
     }
+
+    @Provides
+    fun provideUserDao(db: AppDb): UserDao = db.userDao()
+
+    @Provides
+    fun provideJobDao(db: AppDb): JobDao = db.jobDao()
+
+    @Provides
+    fun provideWallRemoteKeyDao(db: AppDb): WallRemoteKeyDao = db.wallRemoteKeyDao()
+
+    @Provides
+    fun providePostDao(db: AppDb): PostDao = db.postDao()
+
+    @Provides
+    fun providePostRemoteKeyDao(db: AppDb): PostRemoteKeyDao = db.postRemoteKeyDao()
+
+    @Provides
+    fun provideCacheTimeOutDao(db: AppDb): CacheTimeoutDao = db.cacheTimeoutDao()
 }

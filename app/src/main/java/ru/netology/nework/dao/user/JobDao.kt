@@ -1,9 +1,8 @@
 package ru.netology.nework.dao.user
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 import ru.netology.nework.entity.user.JobEntity
 
@@ -12,10 +11,10 @@ interface JobDao {
     @Query("SELECT * FROM JobEntity WHERE ownerId = :ownerId")
     fun getJobsByOwnerId(ownerId: Long): Flow<List<JobEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insert(jobs: List<JobEntity>)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insert(job: JobEntity)
 
     @Query("DELETE FROM JobEntity WHERE ownerId = :ownerId")

@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.netology.nework.dto.Job
+import ru.netology.nework.error.ErrorType
 import ru.netology.nework.error.toErrorType
 import ru.netology.nework.fragment.user.JobsFragmentArgs
 import ru.netology.nework.model.AppModelState
@@ -88,7 +89,12 @@ class JobsViewModel @Inject constructor(
     }
 
     fun handleError(exception: Throwable) {
-        val errorType = exception.toErrorType()
+        val errorType = exception.toErrorType { code ->
+            when (code) {
+                403 -> ErrorType.AUTH_REQUIRED
+                else -> ErrorType.UNKNOWN
+            }
+        }
         _state.update { state ->
             state.copy(
                 loading = false,

@@ -117,7 +117,6 @@ class DetailedUserFragment : Fragment(R.layout.fragment_detailed_user) {
 
                         appBarLayout.isVisible = !showPlaceholders
                         viewPager.isVisible = !showPlaceholders
-                        fab.isVisible = !showPlaceholders
                         placeholderContainer.scroll.isVisible = showPlaceholders
                         placeholderContainer.errorPlaceholder.isVisible = showErrorPlaceholder
                         placeholderContainer.progress.isVisible = showProgress

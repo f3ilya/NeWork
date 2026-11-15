@@ -7,6 +7,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
+import leakcanary.AppWatcher
 import ru.netology.nework.R
 import ru.netology.nework.databinding.FragmentMapBinding
 import ru.netology.nework.extensions.checkAndRequestLocationPermission
@@ -72,5 +73,13 @@ class MapFragment : Fragment(R.layout.fragment_map), OnSaveActionListener {
             handle["long"] = viewModel.map.value.long
         }
         navController.navigateUp()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        AppWatcher.objectWatcher.expectWeaklyReachable(
+            yandexMapManager,
+            "MyCustomManager should be cleared map"
+        )
     }
 }

@@ -23,20 +23,21 @@ import ru.netology.nework.model.AppModelState
 import ru.netology.nework.model.UserModel
 import ru.netology.nework.util.FragmentMode
 import ru.netology.nework.util.OnSaveActionListener
+import ru.netology.nework.util.autoCleared
 import ru.netology.nework.viewmodel.user.UsersViewModel
 
 @AndroidEntryPoint
 class UsersFragment : Fragment(R.layout.fragment_users), OnSaveActionListener {
     private val binding by viewBinding(FragmentUsersBinding::bind)
     private val viewModel: UsersViewModel by viewModels()
-    private lateinit var adapter: UsersAdapter
+    private var adapter by autoCleared<UsersAdapter>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         setupAdapter()
         setupListeners()
-        observeViewModel()
+        setupObservers()
     }
 
     private fun setupAdapter() {
@@ -64,7 +65,7 @@ class UsersFragment : Fragment(R.layout.fragment_users), OnSaveActionListener {
         }
     }
 
-    private fun observeViewModel() {
+    private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -88,8 +89,12 @@ class UsersFragment : Fragment(R.layout.fragment_users), OnSaveActionListener {
                     viewModel.state.collectLatest { state ->
                         updatePlaceholders(state)
 
-                        if (state.error && state.errorMessage != null) {
-                            error(state.errorMessage)
+                        state.errorType?.let { errorType ->
+                            Snackbar.make(
+                                binding.root,
+                                errorType.messageRes,
+                                Snackbar.LENGTH_LONG
+                            ).show()
                             viewModel.clearErrorMessage()
                         }
                     }
@@ -119,20 +124,5 @@ class UsersFragment : Fragment(R.layout.fragment_users), OnSaveActionListener {
         val prevFragment = navController.previousBackStackEntry ?: return
         prevFragment.savedStateHandle["users"] = selectedIds
         navController.navigateUp()
-    }
-
-    private fun error(error: String) {
-        val messageResId = when (error) {
-            "error_network" -> R.string.error_network
-            "error_db" -> R.string.error_db
-            "404" -> R.string.user_not_found
-            else -> R.string.error_unknown
-        }
-
-        Snackbar.make(
-            binding.root,
-            getString(messageResId),
-            Snackbar.LENGTH_LONG
-        ).show()
     }
 }

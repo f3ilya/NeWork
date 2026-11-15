@@ -1,170 +1,148 @@
 package ru.netology.nework.media
 
 import android.content.Context
-import android.view.View
-import android.widget.SeekBar
-import androidx.core.view.isVisible
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.PlayerView
-import com.google.android.material.button.MaterialButton
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.ActivityScoped
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
-@ActivityScoped
+data class PlaybackState(
+    val currentPostId: Long? = null,
+    val isPlaying: Boolean = false,
+    val progress: Long = 0L,
+    val duration: Long = 0L,
+    val isVideo: Boolean = false
+)
+
 class MediaPlaybackManager @Inject constructor(
-    @ApplicationContext context: Context
+    @param:ApplicationContext private val context: Context
 ) : DefaultLifecycleObserver {
-    val exoPlayer: ExoPlayer = ExoPlayer.Builder(context).build()
-    var currentPlayingPostId: Long? = null
+    var exoPlayer: ExoPlayer? = null
         private set
-    private var currentSeekBar: SeekBar? = null
-    private var currentPlayButton: MaterialButton? = null
-    private var currentVideoPlayerView: PlayerView? = null
-    private var currentVideoPlaceholder: View? = null
-    private var onErrorListener: ((Throwable) -> Unit)? = null
-    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
+    private val _playbackState = MutableStateFlow(PlaybackState())
+    val playbackState: StateFlow<PlaybackState> = _playbackState.asStateFlow()
+
+    private val _errorFlow = MutableSharedFlow<PlaybackException>(extraBufferCapacity = 1)
+    val errorFlow: SharedFlow<PlaybackException> = _errorFlow.asSharedFlow()
+
+    private var lifecycleOwner: LifecycleOwner? = null
     private var progressJob: Job? = null
 
-    init {
-        exoPlayer.addListener(object : Player.Listener {
-            override fun onPlaybackStateChanged(state: Int) {
-                if (state == Player.STATE_READY) currentSeekBar?.max = exoPlayer.duration.toInt()
-                progressUpdate(exoPlayer.isPlaying)
+    private val listener = object : Player.Listener {
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            if (playbackState == Player.STATE_ENDED) {
+                exoPlayer?.seekTo(0)
+                exoPlayer?.pause()
             }
+            updateState()
+        }
 
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                currentPlayButton?.isChecked = isPlaying
-                progressUpdate(isPlaying)
-            }
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            updateState()
+            manageProgressJob(isPlaying)
+        }
 
-            override fun onPlayerError(error: PlaybackException) {
-                onErrorListener?.invoke(error)
-                stopAndReset()
-            }
-        })
+        override fun onPlayerError(error: PlaybackException) {
+            _errorFlow.tryEmit(error)
+            stopAndReset()
+        }
     }
 
-    private fun progressUpdate(isPlaying: Boolean) {
+    override fun onCreate(owner: LifecycleOwner) {
+        lifecycleOwner = owner
+        exoPlayer = ExoPlayer.Builder(context).build().apply { addListener(listener) }
+    }
+
+    private fun updateState() {
+        val player = exoPlayer ?: return
+        if (_playbackState.value.currentPostId == null) return
+        _playbackState.update { state ->
+            state.copy(
+                isPlaying = player.isPlaying,
+                duration = player.duration.coerceAtLeast(0L),
+                progress = player.currentPosition.coerceAtLeast(0L)
+            )
+        }
+    }
+
+    private fun manageProgressJob(isPlaying: Boolean) {
         progressJob?.cancel()
         if (isPlaying) {
-            progressJob = scope.launch {
+            progressJob = lifecycleOwner?.lifecycleScope?.launch {
                 while (isActive) {
-                    currentSeekBar?.progress = exoPlayer.currentPosition.toInt()
+                    updateState()
                     delay(200.milliseconds)
                 }
             }
         }
     }
 
-    private fun setupSeekBarListener(seekBar: SeekBar) {
-        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) exoPlayer.seekTo(progress.toLong())
-            }
-
-            override fun onStartTrackingTouch(sb: SeekBar?) {}
-            override fun onStopTrackingTouch(sb: SeekBar?) {}
-        })
-    }
-
-    private fun prepareMedia(postId: Long, url: String, isVideo: Boolean = false) {
-        if (currentPlayingPostId == postId) {
+    fun togglePlay(postId: Long, url: String, isVideo: Boolean = false) {
+        val player = exoPlayer ?: return
+        if (_playbackState.value.currentPostId == postId) {
             if (!isVideo) {
-                if (exoPlayer.playbackState == Player.STATE_ENDED) {
-                    exoPlayer.seekTo(0)
-                    currentSeekBar?.progress = 0
-                }
-                if (exoPlayer.isPlaying) exoPlayer.pause() else exoPlayer.play()
+                if (player.isPlaying) player.pause() else player.play()
             }
             return
         }
+
         stopAndReset()
-        currentPlayingPostId = postId
-        exoPlayer.setMediaItem(MediaItem.fromUri(url))
-        exoPlayer.prepare()
-        exoPlayer.play()
+        _playbackState.value = PlaybackState(
+            currentPostId = postId,
+            isVideo = isVideo
+        )
+        player.setMediaItem(MediaItem.fromUri(url))
+        player.prepare()
+        player.play()
     }
 
-    fun setOnErrorListener(listener: (Throwable) -> Unit) {
-        this.onErrorListener = listener
-    }
-
-
-    fun playAudio(postId: Long, url: String, seekBar: SeekBar, playButton: MaterialButton) {
-        val sameTrack = currentPlayingPostId == postId
-        prepareMedia(postId, url)
-        if (sameTrack) return
-
-        currentSeekBar = seekBar
-        currentPlayButton = playButton
-        exoPlayer.clearVideoSurface()
-        setupSeekBarListener(seekBar)
-    }
-
-    fun rebindAudio(seekBar: SeekBar, playButton: MaterialButton) {
-        currentSeekBar = seekBar
-        currentPlayButton = playButton
-        currentPlayButton?.isChecked = exoPlayer.isPlaying
-        currentSeekBar?.max = exoPlayer.duration.toInt()
-        currentSeekBar?.progress = exoPlayer.currentPosition.toInt()
-        setupSeekBarListener(seekBar)
-        progressUpdate(exoPlayer.isPlaying)
-    }
-
-    fun playVideo(postId: Long, url: String, playerView: PlayerView, placeholder: View) {
-        val sameVideo = currentPlayingPostId == postId
-        prepareMedia(postId, url, true)
-        if (sameVideo) return
-
-        rebindVideo(playerView, placeholder)
-    }
-
-    fun rebindVideo(playerView: PlayerView, placeholder: View) {
-        currentVideoPlayerView = playerView
-        currentVideoPlaceholder = placeholder
-        placeholder.isVisible = false
-        playerView.isVisible = true
-        playerView.player = null
-        playerView.player = exoPlayer
+    fun seekTo(postId: Long, position: Long) {
+        val player = exoPlayer ?: return
+        if (_playbackState.value.currentPostId == postId) {
+            player.seekTo(position)
+            updateState()
+        }
     }
 
     fun stopAndReset() {
         progressJob?.cancel()
-        currentPlayButton?.isChecked = false
-        currentSeekBar?.progress = 0
-        currentVideoPlaceholder?.isVisible = true
-        currentVideoPlayerView?.isVisible = false
-        currentVideoPlayerView?.player = null
-        currentPlayingPostId = null
-        currentVideoPlaceholder = null
-        currentVideoPlayerView = null
-        currentSeekBar = null
-        currentPlayButton = null
-        exoPlayer.stop()
-        exoPlayer.clearMediaItems()
-        exoPlayer.clearVideoSurface()
+        exoPlayer?.apply {
+            stop()
+            clearMediaItems()
+            clearVideoSurface()
+        }
+        _playbackState.value = PlaybackState()
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        exoPlayer.pause()
-        progressJob?.cancel()
+        exoPlayer?.pause()
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
         stopAndReset()
+        exoPlayer?.apply {
+            removeListener(listener)
+            release()
+        }
+        exoPlayer = null
+        lifecycleOwner = null
     }
 }

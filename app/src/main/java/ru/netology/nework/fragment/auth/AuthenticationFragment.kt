@@ -28,7 +28,7 @@ class AuthenticationFragment : Fragment(R.layout.fragment_authentication) {
         super.onViewCreated(view, savedInstanceState)
 
         setupListeners()
-        observeViewModel()
+        setupObservers()
     }
 
     private fun setupListeners() {
@@ -53,7 +53,7 @@ class AuthenticationFragment : Fragment(R.layout.fragment_authentication) {
         }
     }
 
-    private fun observeViewModel() {
+    private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -65,16 +65,10 @@ class AuthenticationFragment : Fragment(R.layout.fragment_authentication) {
 
                 launch {
                     viewModel.state.collectLatest { state ->
-                        if (state.error && state.errorMessage != null) {
-                            val messageResId = when (state.errorMessage) {
-                                "error_network" -> R.string.error_network
-                                "400" -> R.string.incorrect_login_or_password
-                                "404" -> R.string.the_user_is_not_registered
-                                else -> R.string.error_unknown
-                            }
+                        state.errorType?.let { errorType ->
                             Snackbar.make(
                                 binding.root,
-                                getString(messageResId),
+                                errorType.messageRes,
                                 Snackbar.LENGTH_LONG
                             ).show()
                             viewModel.resetState()

@@ -20,11 +20,11 @@ import ru.netology.nework.R
 import ru.netology.nework.adapter.OnInteractionListener
 import ru.netology.nework.adapter.PagingLoadStateAdapter
 import ru.netology.nework.adapter.PostsAdapter
-import ru.netology.nework.databinding.CardPostBinding
 import ru.netology.nework.databinding.FragmentPostsBinding
 import ru.netology.nework.dto.Post
 import ru.netology.nework.extensions.shareIntent
 import ru.netology.nework.media.MediaPlaybackManager
+import ru.netology.nework.util.autoCleared
 import ru.netology.nework.viewmodel.user.DetailedUserViewModel
 import ru.netology.nework.viewmodel.user.WallViewModel
 import javax.inject.Inject
@@ -40,7 +40,7 @@ class WallFragment : Fragment(R.layout.fragment_posts) {
     private val binding by viewBinding(FragmentPostsBinding::bind)
     private val viewModel: WallViewModel by viewModels()
     private val parentViewModel: DetailedUserViewModel by viewModels({ requireParentFragment() })
-    private lateinit var adapter: PostsAdapter
+    private var adapter by autoCleared<PostsAdapter>()
 
     @Inject
     lateinit var playbackManager: MediaPlaybackManager
@@ -52,7 +52,7 @@ class WallFragment : Fragment(R.layout.fragment_posts) {
         setupExoPlayer()
         setupAdapter()
         setupListeners()
-        observeViewModel()
+        setupObservers()
     }
 
     private fun bind() {
@@ -80,9 +80,6 @@ class WallFragment : Fragment(R.layout.fragment_posts) {
 
     private fun setupExoPlayer() {
         viewLifecycleOwner.lifecycle.addObserver(playbackManager)
-        playbackManager.setOnErrorListener { error ->
-            viewModel.handleError(error)
-        }
     }
 
     private fun setupAdapter() {
@@ -95,22 +92,18 @@ class WallFragment : Fragment(R.layout.fragment_posts) {
                 requireContext().shareIntent(post.content)
             }
 
-            override fun onAudio(post: Post, binding: CardPostBinding) {
-                playbackManager.playAudio(
-                    postId = post.id,
-                    url = post.attachment?.url ?: "",
-                    seekBar = binding.attachmentContainer.audioSeekBar,
-                    playButton = binding.attachmentContainer.audioPlayPause,
-                )
+            override fun onAudio(post: Post) {
+                val url = post.attachment?.url ?: return
+                playbackManager.togglePlay(postId = post.id, url = url, isVideo = false)
             }
 
-            override fun onVideo(post: Post, binding: CardPostBinding) {
-                playbackManager.playVideo(
-                    postId = post.id,
-                    url = post.attachment?.url ?: "",
-                    playerView = binding.attachmentContainer.videoAttachment,
-                    placeholder = binding.attachmentContainer.videoPlaceholder,
-                )
+            override fun onVideo(post: Post) {
+                val url = post.attachment?.url ?: return
+                playbackManager.togglePlay(postId = post.id, url = url, isVideo = true)
+            }
+
+            override fun onSeek(post: Post, progress: Long) {
+                playbackManager.seekTo(postId = post.id, position = progress)
             }
 
             override fun onPost(post: Post) {}
@@ -133,7 +126,7 @@ class WallFragment : Fragment(R.layout.fragment_posts) {
         }
     }
 
-    private fun observeViewModel() {
+    private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { viewModel.data.collectLatest(adapter::submitData) }
@@ -172,9 +165,15 @@ class WallFragment : Fragment(R.layout.fragment_posts) {
                 }
 
                 launch {
+                    playbackManager.errorFlow.collectLatest { error ->
+                        viewModel.handleError(error)
+                    }
+                }
+
+                launch {
                     viewModel.state.collectLatest { state ->
-                        if (state.error && state.errorMessage != null) {
-                            parentViewModel.changeError(state.errorMessage)
+                        state.errorType?.let { errorType ->
+                            parentViewModel.changeError(errorType)
                             viewModel.resetState()
                         }
                     }

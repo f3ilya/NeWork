@@ -2,6 +2,7 @@ package ru.netology.nework.fragment.post
 
 import android.os.Bundle
 import android.view.View
+import android.widget.SeekBar
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -24,12 +25,14 @@ import ru.netology.nework.extensions.load
 import ru.netology.nework.extensions.renderAvatarStack
 import ru.netology.nework.map.YandexMapManager
 import ru.netology.nework.media.MediaPlaybackManager
+import ru.netology.nework.media.PlaybackState
 import ru.netology.nework.model.AvatarModel
 import ru.netology.nework.util.FragmentMode
 import ru.netology.nework.viewmodel.post.DetailedPostViewModel
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -43,12 +46,17 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
     @Inject
     lateinit var yandexMapManager: YandexMapManager
 
+    private var currentPostId: Long = 0L
+    private var isUserSeeking = false
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        postponeEnterTransition(100, TimeUnit.MILLISECONDS)
         setupYandexMap()
         setupExoPlayer()
-        observeViewModel()
+        setupListeners()
+        setupObservers()
     }
 
     private fun setupYandexMap() {
@@ -58,17 +66,45 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
 
     private fun setupExoPlayer() {
         viewLifecycleOwner.lifecycle.addObserver(playbackManager)
-        playbackManager.setOnErrorListener { error ->
-            viewModel.handleError(error)
+    }
+
+    private fun setupListeners() {
+        with(binding) {
+            attachmentContainer.audioSeekBar.setOnSeekBarChangeListener(object :
+                SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {}
+
+
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                    isUserSeeking = true
+                }
+
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                    isUserSeeking = false
+                    seekBar?.let {
+                        playbackManager.seekTo(
+                            postId = currentPostId,
+                            position = it.progress.toLong()
+                        )
+                    }
+                }
+            })
         }
     }
 
-    private fun observeViewModel() {
+    private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
+                    playbackManager.playbackState.collectLatest { state ->
+                        renderPlaybackState(state)
+                    }
+                }
+
+                launch {
                     viewModel.detailedPost.collectLatest { post ->
                         post?.let {
+                            currentPostId = post.id
                             bindPost(post)
                             bindMap(post.coordinates)
                         }
@@ -76,11 +112,20 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
                 }
 
                 launch {
+                    playbackManager.errorFlow.collectLatest { error ->
+                        viewModel.handleError(error)
+                    }
+                }
+
+                launch {
                     viewModel.state.collectLatest { state ->
                         binding.postContentContainer.isVisible = !state.loading
-
-                        if (state.error && state.errorMessage != null) {
-                            error(state.errorMessage)
+                        state.errorType?.let { errorType ->
+                            Snackbar.make(
+                                binding.root,
+                                errorType.messageRes,
+                                Snackbar.LENGTH_LONG
+                            ).show()
                             viewModel.resetState()
                         }
                     }
@@ -124,45 +169,36 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
             like.isChecked = post.likedByMe
             like.text = post.likeOwnerIds.size.toString()
 
-            attachmentContainer.imageAttachment.isVisible = false
-            attachmentContainer.videoContainer.isVisible = false
-            attachmentContainer.audioAttachment.isVisible = false
-
+            val type = post.attachment?.type
+            attachmentContainer.imageAttachment.isVisible = type == AttachmentType.IMAGE
+            attachmentContainer.videoContainer.isVisible = type == AttachmentType.VIDEO
+            attachmentContainer.audioAttachment.isVisible = type == AttachmentType.AUDIO
             when (post.attachment?.type) {
                 AttachmentType.IMAGE -> {
                     attachmentContainer.imageAttachment.load(post.attachment.url)
-                    attachmentContainer.imageAttachment.isVisible = true
                 }
 
                 AttachmentType.VIDEO -> {
-                    attachmentContainer.videoContainer.isVisible = true
                     attachmentContainer.videoContainer.setOnClickListener {
-                        playbackManager.playVideo(
+                        playbackManager.togglePlay(
                             postId = post.id,
                             url = post.attachment.url,
-                            playerView = attachmentContainer.videoAttachment,
-                            placeholder = attachmentContainer.videoPlaceholder
+                            isVideo = true
                         )
                     }
                 }
 
                 AttachmentType.AUDIO -> {
-                    attachmentContainer.audioAttachment.isVisible = true
                     attachmentContainer.audioPlayPause.setOnClickListener {
-                        playbackManager.playAudio(
+                        playbackManager.togglePlay(
                             postId = post.id,
                             url = post.attachment.url,
-                            seekBar = attachmentContainer.audioSeekBar,
-                            playButton = attachmentContainer.audioPlayPause
+                            isVideo = false
                         )
                     }
                 }
 
-                else -> {
-                    attachmentContainer.audioAttachment.isVisible = false
-                    attachmentContainer.videoAttachment.isVisible = false
-                    attachmentContainer.imageAttachment.isVisible = false
-                }
+                null -> Unit
             }
 
             like.setOnClickListener {
@@ -253,25 +289,31 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
                     }
                 }.show()
             }
+            startPostponedEnterTransition()
         }
     }
 
-    private fun error(error: String) {
-        val messageResId = when (error) {
-            "error_playback" -> R.string.error_playback
-            "error_file_too_large" -> R.string.error_file_too_large
-            "error_file_access" -> R.string.error_file_access
-            "error_network" -> R.string.error_network
-            "error_db" -> R.string.error_db
-            "403" -> R.string.authorization_is_required_for_this_action
-            "404" -> R.string.post_not_found
-            else -> R.string.error_unknown
-        }
+    private fun renderPlaybackState(state: PlaybackState) {
+        val attachmentType = viewModel.detailedPost.value?.attachment?.type ?: return
+        val isActive = (state.currentPostId == currentPostId)
+        with(binding.attachmentContainer) {
+            when (attachmentType) {
+                AttachmentType.VIDEO -> {
+                    videoPlaceholder.isVisible = !isActive
+                    videoAttachment.isVisible = isActive
+                    videoAttachment.player = if (isActive) playbackManager.exoPlayer else null
+                }
 
-        Snackbar.make(
-            binding.root,
-            getString(messageResId),
-            Snackbar.LENGTH_LONG
-        ).show()
+                AttachmentType.AUDIO -> {
+                    audioPlayPause.isChecked = isActive && state.isPlaying
+                    audioSeekBar.max = if (isActive) state.duration.toInt() else 0
+                    if (!isUserSeeking) {
+                        audioSeekBar.progress = if (isActive) state.progress.toInt() else 0
+                    }
+                }
+
+                else -> Unit
+            }
+        }
     }
 }

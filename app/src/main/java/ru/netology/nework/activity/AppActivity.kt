@@ -28,7 +28,6 @@ import ru.netology.nework.extensions.showConfirmationDialog
 import ru.netology.nework.fragment.post.DetailedPostFragmentArgs
 import ru.netology.nework.fragment.user.DetailedUserFragmentArgs
 import ru.netology.nework.fragment.user.UsersFragmentArgs
-import ru.netology.nework.media.MediaPlaybackManager
 import ru.netology.nework.util.FragmentMode
 import ru.netology.nework.util.OnSaveActionListener
 import javax.inject.Inject
@@ -38,8 +37,6 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
     @Inject
     lateinit var auth: AppAuth
 
-    @Inject
-    lateinit var playbackManager: MediaPlaybackManager
     private val binding by viewBinding(ActivityAppBinding::bind)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -237,10 +234,5 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                 .setDuration(300)
                 .start()
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        playbackManager.exoPlayer.release()
     }
 }

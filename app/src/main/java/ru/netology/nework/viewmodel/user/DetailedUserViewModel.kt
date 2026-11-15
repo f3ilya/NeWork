@@ -10,13 +10,13 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.netology.nework.auth.AppAuth
 import ru.netology.nework.dto.UserResponse
-import ru.netology.nework.error.AppError
+import ru.netology.nework.error.ErrorType
+import ru.netology.nework.error.toErrorType
 import ru.netology.nework.fragment.user.DetailedUserFragmentArgs
 import ru.netology.nework.model.AppModelState
 import ru.netology.nework.repository.user.UserRepository
@@ -25,7 +25,7 @@ import javax.inject.Inject
 @HiltViewModel
 class DetailedUserViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    repository: UserRepository,
+    private val repository: UserRepository,
     auth: AppAuth
 ) : ViewModel() {
     private val args = DetailedUserFragmentArgs.fromSavedStateHandle(savedStateHandle)
@@ -36,8 +36,6 @@ class DetailedUserViewModel @Inject constructor(
     val state: StateFlow<AppModelState> = _state.asStateFlow()
 
     val user: StateFlow<UserResponse?> = repository.getUserById(userId)
-        .onStart { _state.value = AppModelState(loading = true) }
-        .onEach { resetState() }
         .catch { exception -> handleError(exception) }
         .stateIn(
             scope = viewModelScope,
@@ -46,9 +44,23 @@ class DetailedUserViewModel @Inject constructor(
         )
 
     init {
+        refresh()
+    }
+
+    fun refresh() {
+        _state.update { state ->
+            state.copy(
+                loading = true,
+                refreshing = false,
+                error = false,
+                errorType = null
+            )
+        }
         viewModelScope.launch {
             runCatching {
                 repository.checkAndRefreshUser(userId)
+            }.onSuccess {
+                resetState()
             }.onFailure { exception ->
                 if (exception is CancellationException) throw exception
 
@@ -61,12 +73,33 @@ class DetailedUserViewModel @Inject constructor(
         _state.value = AppModelState()
     }
 
-    fun changeError(errorMessage: String) {
-        _state.value = AppModelState(error = true, errorMessage = errorMessage)
+    fun clearErrorMessage() {
+        _state.update { state ->
+            state.copy(errorType = null)
+        }
+    }
+
+    fun changeError(errorType: ErrorType) {
+        _state.update { state ->
+            state.copy(errorType = errorType)
+        }
     }
 
     fun handleError(exception: Throwable) {
-        val error = AppError.from(exception)
-        _state.value = AppModelState(error = true, errorMessage = error.code)
+        val errorType = exception.toErrorType { status ->
+            when (status) {
+                403 -> ErrorType.AUTH_REQUIRED
+                404 -> ErrorType.POST_NOT_FOUND
+                else -> ErrorType.UNKNOWN
+            }
+        }
+        _state.update { state ->
+            state.copy(
+                loading = false,
+                refreshing = false,
+                error = true,
+                errorType = errorType
+            )
+        }
     }
 }

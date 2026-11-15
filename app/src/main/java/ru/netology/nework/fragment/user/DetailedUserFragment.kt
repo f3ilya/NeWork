@@ -2,6 +2,7 @@ package ru.netology.nework.fragment.user
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -10,16 +11,17 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
 import dev.androidbroadcast.vbpd.viewBinding
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import ru.netology.nework.R
 import ru.netology.nework.activity.AppActivity
 import ru.netology.nework.adapter.DetailedUserAdapter
 import ru.netology.nework.databinding.FragmentDetailedUserBinding
 import ru.netology.nework.extensions.load
+import ru.netology.nework.util.bindViewPager
 import ru.netology.nework.viewmodel.user.DetailedUserViewModel
 
 @AndroidEntryPoint
@@ -27,25 +29,29 @@ class DetailedUserFragment : Fragment(R.layout.fragment_detailed_user) {
     private val binding by viewBinding(FragmentDetailedUserBinding::bind)
     private val viewModel: DetailedUserViewModel by viewModels()
 
+    init {
+        bindViewPager(
+            viewPager = { binding.viewPager },
+            tabLayout = { binding.tabLayout },
+            adapter = {
+                DetailedUserAdapter(
+                    childFragmentManager,
+                    viewLifecycleOwner.lifecycle,
+                    viewModel.userId,
+                    viewModel.isMyProfile
+                )
+            },
+            tabConfig = { tab, pos ->
+                tab.text = if (pos == 0) getString(R.string.wall) else getString(R.string.jobs)
+            }
+        )
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupAdapter()
         setupListeners()
-        observeViewModel()
-    }
-
-    private fun setupAdapter() {
-        with(binding) {
-            viewPager.adapter = DetailedUserAdapter(
-                this@DetailedUserFragment,
-                viewModel.userId,
-                viewModel.isMyProfile
-            )
-            TabLayoutMediator(tabLayout, viewPager) { tab, pos ->
-                tab.text = if (pos == 0) getString(R.string.wall) else getString(R.string.jobs)
-            }.attach()
-        }
+        setupObservers()
     }
 
     private fun setupListeners() {
@@ -89,14 +95,32 @@ class DetailedUserFragment : Fragment(R.layout.fragment_detailed_user) {
             fab.setOnClickListener {
                 findNavController().navigate(R.id.action_detailedUserFragment_to_newJobFragment)
             }
+
+            placeholderContainer.retryButton.setOnClickListener {
+                viewModel.refresh()
+            }
         }
     }
 
-    private fun observeViewModel() {
+    private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    viewModel.user.collectLatest { user ->
+                combine(viewModel.user, viewModel.state) { user, state ->
+                    user to state
+                }.collectLatest { (user, state) ->
+                    with(binding)
+                    {
+                        val isUserMissing = user == null
+                        val showErrorPlaceholder = isUserMissing && state.error
+                        val showProgress = isUserMissing && state.loading
+                        val showPlaceholders = showErrorPlaceholder || showProgress
+
+                        appBarLayout.isVisible = !showPlaceholders
+                        viewPager.isVisible = !showPlaceholders
+                        fab.isVisible = !showPlaceholders
+                        placeholderContainer.scroll.isVisible = showPlaceholders
+                        placeholderContainer.errorPlaceholder.isVisible = showErrorPlaceholder
+                        placeholderContainer.progress.isVisible = showProgress
                         user?.let {
                             binding.avatar.load(url = user.avatar)
                             (activity as? AppActivity)?.setToolbarUserTitle(
@@ -104,35 +128,17 @@ class DetailedUserFragment : Fragment(R.layout.fragment_detailed_user) {
                                 isMyProfile = viewModel.isMyProfile
                             )
                         }
-                    }
-                }
-
-                launch {
-                    viewModel.state.collectLatest { state ->
-                        if (state.error && state.errorMessage != null) {
-                            error(state.errorMessage)
-                            viewModel.resetState()
+                        state.errorType?.let { errorType ->
+                            Snackbar.make(
+                                binding.root,
+                                errorType.messageRes,
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                            viewModel.clearErrorMessage()
                         }
                     }
                 }
             }
         }
-    }
-
-    private fun error(error: String) {
-        val messageResId = when (error) {
-            "error_playback" -> R.string.error_playback
-            "error_network" -> R.string.error_network
-            "error_db" -> R.string.error_db
-            "403" -> R.string.authorization_is_required_for_this_action
-            "404" -> R.string.post_not_found
-            else -> R.string.error_unknown
-        }
-
-        Snackbar.make(
-            binding.root,
-            getString(messageResId),
-            Snackbar.LENGTH_LONG
-        ).show()
     }
 }

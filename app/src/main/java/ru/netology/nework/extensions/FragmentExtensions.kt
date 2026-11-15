@@ -19,8 +19,7 @@ import com.github.dhaval2404.imagepicker.ImagePicker
 import com.github.dhaval2404.imagepicker.constant.ImageProvider
 import com.google.android.material.snackbar.Snackbar
 import ru.netology.nework.R
-import ru.netology.nework.error.FileAccessError
-import ru.netology.nework.error.LocalAppError
+import ru.netology.nework.error.AppError
 import java.io.File
 
 fun Fragment.hideKeyboard() {
@@ -91,14 +90,14 @@ fun Fragment.registerImagePickerLauncher(
 ): ActivityResultLauncher<Intent> {
     return registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         when (result.resultCode) {
-            ImagePicker.RESULT_ERROR -> onError(FileAccessError())
+            ImagePicker.RESULT_ERROR -> onError(AppError.FileAccessError())
 
             Activity.RESULT_OK -> {
                 val uri: Uri? = result.data?.data
                 val file = uri?.toFile()
                 if (uri != null && file != null) {
                     if (isFileTooLarge(uri)) {
-                        onError(LocalAppError("error_file_too_large"))
+                        onError(AppError.FileTooLargeError())
                     } else {
                         onSuccess(uri, file)
                     }
@@ -172,7 +171,7 @@ fun Fragment.registerMediaFilePickerLauncher(
         if (uri == null) return@registerForActivityResult
 
         if (isFileTooLarge(uri)) {
-            onError(LocalAppError("error_file_too_large"))
+            onError(AppError.FileTooLargeError())
         } else {
             onSuccess(uri)
         }

@@ -11,8 +11,11 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.netology.nework.error.AppError
+import ru.netology.nework.error.ErrorType
+import ru.netology.nework.error.toErrorType
 import ru.netology.nework.model.AppModelState
 import ru.netology.nework.model.MediaModel
 import ru.netology.nework.repository.auth.AuthRepository
@@ -35,9 +38,15 @@ class RegViewModel @Inject constructor(
     val photo: StateFlow<MediaModel> = _photo.asStateFlow()
 
     fun registration(login: String, pass: String, name: String) {
-        if (_state.value.loading) return
-
-        _state.value = AppModelState(loading = true)
+        val previousState = _state.getAndUpdate { state ->
+            state.copy(
+                loading = true,
+                refreshing = false,
+                error = false,
+                errorType = null
+            )
+        }
+        if (previousState.loading) return
         viewModelScope.launch {
             runCatching {
                 val file = if (_photo.value == noPhoto) null else _photo.value.file
@@ -54,7 +63,13 @@ class RegViewModel @Inject constructor(
     }
 
     fun changePhoto(uri: Uri?, file: File?) {
-        _photo.value = MediaModel(uri, file)
+        _photo.update { model ->
+            model.copy(
+                uri = uri,
+                file = file,
+                type = null
+            )
+        }
     }
 
     fun clearPhoto() {
@@ -66,7 +81,20 @@ class RegViewModel @Inject constructor(
     }
 
     fun handleError(exception: Throwable) {
-        val error = AppError.from(exception)
-        _state.value = AppModelState(error = true, errorMessage = error.code)
+        val errorType = exception.toErrorType { status ->
+            when (status) {
+                403 -> ErrorType.USER_ALREADY_REGISTERED
+                404 -> ErrorType.INVALID_PHOTO
+                else -> ErrorType.UNKNOWN
+            }
+        }
+        _state.update { state ->
+            state.copy(
+                loading = false,
+                refreshing = false,
+                error = true,
+                errorType = errorType
+            )
+        }
     }
 }

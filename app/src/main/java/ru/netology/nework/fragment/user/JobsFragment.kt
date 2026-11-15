@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import ru.netology.nework.R
 import ru.netology.nework.adapter.JobsAdapter
 import ru.netology.nework.databinding.FragmentJobsBinding
+import ru.netology.nework.util.autoCleared
 import ru.netology.nework.viewmodel.user.DetailedUserViewModel
 import ru.netology.nework.viewmodel.user.JobsViewModel
 
@@ -32,7 +33,7 @@ class JobsFragment : Fragment(R.layout.fragment_jobs) {
     private val binding by viewBinding(FragmentJobsBinding::bind)
     private val viewModel: JobsViewModel by viewModels()
     private val parentViewModel: DetailedUserViewModel by viewModels({ requireParentFragment() })
-    private lateinit var adapter: JobsAdapter
+    private var adapter by autoCleared<JobsAdapter>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -40,7 +41,7 @@ class JobsFragment : Fragment(R.layout.fragment_jobs) {
         bind()
         setupAdapter()
         setupListeners()
-        observeViewModel()
+        setupObservers()
     }
 
     private fun bind() {
@@ -82,7 +83,7 @@ class JobsFragment : Fragment(R.layout.fragment_jobs) {
         }
     }
 
-    private fun observeViewModel() {
+    private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 combine(viewModel.jobs, viewModel.state) { jobs, state ->
@@ -105,8 +106,8 @@ class JobsFragment : Fragment(R.layout.fragment_jobs) {
                             placeholderContainer.emptyPlaceholder.isVisible = showEmptyPlaceholder
                             placeholderContainer.progress.isVisible = showProgress
 
-                            if (state.error && state.errorMessage != null) {
-                                parentViewModel.changeError(state.errorMessage)
+                            state.errorType?.let { errorType ->
+                                parentViewModel.changeError(errorType)
                                 viewModel.clearErrorMessage()
                             }
                         }

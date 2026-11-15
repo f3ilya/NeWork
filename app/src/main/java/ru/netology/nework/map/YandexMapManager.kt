@@ -15,30 +15,24 @@ import com.yandex.mapkit.map.PlacemarkMapObject
 import com.yandex.mapkit.mapview.MapView
 import com.yandex.mapkit.user_location.UserLocationLayer
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.FragmentScoped
 import ru.netology.nework.R
 import ru.netology.nework.util.DrawableImageProvider
 import ru.netology.nework.util.ImageInfo
 import java.lang.ref.WeakReference
 import javax.inject.Inject
 
-@FragmentScoped
 class YandexMapManager @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) : DefaultLifecycleObserver {
     private var currentMapView: MapView? = null
     private var mapInputListener: InputListener? = null
+    private var mapInputListenerRef: WeakReference<InputListener>? = null
     private var userLocationLayer: UserLocationLayer? = null
     private var currentPlacemark: PlacemarkMapObject? = null
-    private val imageProvider = DrawableImageProvider(
-        context,
-        ImageInfo(R.drawable.ic_location_24)
-    )
-    private val iconStyle = IconStyle().apply { anchor = PointF(0.5f, 1.0f) }
-
-    init {
-        MapKitFactory.initialize(context)
+    private val imageProvider by lazy {
+        DrawableImageProvider(context, ImageInfo(R.drawable.ic_location_24))
     }
+    private val iconStyle = IconStyle().apply { anchor = PointF(0.5f, 1.0f) }
 
     fun bindMapView(mapView: MapView) {
         detachMap()
@@ -50,7 +44,7 @@ class YandexMapManager @Inject constructor(
         val map = mapView.mapWindow.map
         val targetPoint = Point(latitude, longitude)
         map.mapObjects.clear()
-        currentPlacemark = map.mapObjects.addPlacemark { placemarkMapObject ->
+        map.mapObjects.addPlacemark { placemarkMapObject ->
             placemarkMapObject.geometry = targetPoint
             placemarkMapObject.setIcon(imageProvider)
             placemarkMapObject.setIconStyle(iconStyle)
@@ -61,13 +55,11 @@ class YandexMapManager @Inject constructor(
     fun setupLocationPicker(onPointSelected: (Double, Double) -> Unit) {
         val mapView = currentMapView ?: return
         val map = mapView.mapWindow.map
-        if (mapInputListener != null) {
-            map.removeInputListener(WeakReference(mapInputListener))
-        }
-        mapInputListener = object : InputListener {
+        mapInputListenerRef?.let { map.removeInputListener(it) }
+        val listener: InputListener = object : InputListener {
             override fun onMapTap(map: Map, point: Point) {
                 map.mapObjects.clear()
-                currentPlacemark = map.mapObjects.addPlacemark { placemarkMapObject ->
+                map.mapObjects.addPlacemark { placemarkMapObject ->
                     placemarkMapObject.geometry = point
                     placemarkMapObject.setIcon(imageProvider)
                     placemarkMapObject.setIconStyle(iconStyle)
@@ -77,8 +69,10 @@ class YandexMapManager @Inject constructor(
 
             override fun onMapLongTap(map: Map, point: Point) {}
         }
-
-        map.addInputListener(WeakReference(mapInputListener))
+        mapInputListener = listener
+        mapInputListenerRef = WeakReference(listener).also { reference ->
+            map.addInputListener(reference)
+        }
     }
 
     fun moveToUserLocation() {
@@ -130,11 +124,15 @@ class YandexMapManager @Inject constructor(
     }
 
     fun detachMap() {
-        if (mapInputListener != null) {
-            currentMapView?.mapWindow?.map?.removeInputListener(WeakReference(mapInputListener))
+        currentMapView?.mapWindow?.map?.let { map ->
+            mapInputListenerRef?.let { reference ->
+                map.removeInputListener(reference)
+            }
         }
-        userLocationLayer = null
+        mapInputListenerRef?.clear()
+        mapInputListenerRef = null
         mapInputListener = null
+        userLocationLayer = null
         currentMapView = null
         currentPlacemark = null
     }

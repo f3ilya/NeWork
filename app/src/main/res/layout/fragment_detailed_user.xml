@@ -51,4 +51,10 @@
         android:visibility="gone"
         app:srcCompat="@drawable/ic_add_24" />
 
+    <include
+        android:id="@+id/placeholderContainer"
+        layout="@layout/layout_placeholders"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -15,10 +15,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.netology.nework.auth.AppAuth
 import ru.netology.nework.dto.Post
-import ru.netology.nework.error.AppError
+import ru.netology.nework.error.toErrorType
 import ru.netology.nework.fragment.user.WallFragmentArgs
 import ru.netology.nework.model.AppModelState
 import ru.netology.nework.repository.user.UserRepository
@@ -61,8 +62,15 @@ class WallViewModel @Inject constructor(
     }
 
     fun handleError(exception: Throwable) {
-        val error = AppError.from(exception)
-        _state.value = AppModelState(error = true, errorMessage = error.code)
+        val errorType = exception.toErrorType()
+        _state.update { state ->
+            state.copy(
+                loading = false,
+                refreshing = false,
+                error = true,
+                errorType = errorType
+            )
+        }
     }
 
     fun resetState() {

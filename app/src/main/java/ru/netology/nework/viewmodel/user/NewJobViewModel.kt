@@ -10,10 +10,12 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.netology.nework.dto.Job
-import ru.netology.nework.error.AppError
+import ru.netology.nework.error.ErrorType
+import ru.netology.nework.error.toErrorType
 import ru.netology.nework.model.AppModelState
 import ru.netology.nework.repository.user.UserRepository
 import javax.inject.Inject
@@ -43,9 +45,16 @@ class NewJobViewModel @Inject constructor(
     val saveSuccess: SharedFlow<Unit> = _saveSuccess.asSharedFlow()
 
     fun saveJob() {
-        if (_state.value.loading) return
+        val previousState = _state.getAndUpdate { state ->
+            state.copy(
+                loading = true,
+                refreshing = false,
+                error = false,
+                errorType = null
+            )
+        }
+        if (previousState.loading) return
         _edited.value.let { job ->
-            _state.value = AppModelState(loading = true)
             viewModelScope.launch {
                 runCatching {
                     repository.saveJob(job)
@@ -94,7 +103,19 @@ class NewJobViewModel @Inject constructor(
     }
 
     fun handleError(exception: Throwable) {
-        val error = AppError.from(exception)
-        _state.value = AppModelState(error = true, errorMessage = error.code)
+        val errorType = exception.toErrorType { status ->
+            when (status) {
+                403 -> ErrorType.AUTH_REQUIRED
+                else -> ErrorType.UNKNOWN
+            }
+        }
+        _state.update { state ->
+            state.copy(
+                loading = false,
+                refreshing = false,
+                error = true,
+                errorType = errorType
+            )
+        }
     }
 }

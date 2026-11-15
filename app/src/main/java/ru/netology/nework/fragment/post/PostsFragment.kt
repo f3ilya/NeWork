@@ -19,12 +19,12 @@ import ru.netology.nework.R
 import ru.netology.nework.adapter.OnInteractionListener
 import ru.netology.nework.adapter.PagingLoadStateAdapter
 import ru.netology.nework.adapter.PostsAdapter
-import ru.netology.nework.databinding.CardPostBinding
 import ru.netology.nework.databinding.FragmentPostsBinding
 import ru.netology.nework.dto.Post
 import ru.netology.nework.extensions.authorizationIsRequired
 import ru.netology.nework.extensions.shareIntent
 import ru.netology.nework.media.MediaPlaybackManager
+import ru.netology.nework.util.autoCleared
 import ru.netology.nework.viewmodel.post.PostsViewModel
 import javax.inject.Inject
 
@@ -34,7 +34,7 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
     lateinit var playbackManager: MediaPlaybackManager
     private val binding by viewBinding(FragmentPostsBinding::bind)
     private val viewModel: PostsViewModel by viewModels()
-    private lateinit var adapter: PostsAdapter
+    private var adapter by autoCleared<PostsAdapter>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -42,14 +42,11 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
         setupExoPlayer()
         setupAdapter()
         setupListeners()
-        observeViewModel()
+        setupObservers()
     }
 
     private fun setupExoPlayer() {
         viewLifecycleOwner.lifecycle.addObserver(playbackManager)
-        playbackManager.setOnErrorListener { error ->
-            viewModel.handleError(error)
-        }
     }
 
     private fun setupAdapter() {
@@ -62,22 +59,18 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
                 requireContext().shareIntent(post.content)
             }
 
-            override fun onAudio(post: Post, binding: CardPostBinding) {
-                playbackManager.playAudio(
-                    postId = post.id,
-                    url = post.attachment?.url ?: "",
-                    seekBar = binding.attachmentContainer.audioSeekBar,
-                    playButton = binding.attachmentContainer.audioPlayPause,
-                )
+            override fun onAudio(post: Post) {
+                val url = post.attachment?.url ?: return
+                playbackManager.togglePlay(postId = post.id, url = url, isVideo = false)
             }
 
-            override fun onVideo(post: Post, binding: CardPostBinding) {
-                playbackManager.playVideo(
-                    postId = post.id,
-                    url = post.attachment?.url ?: "",
-                    playerView = binding.attachmentContainer.videoAttachment,
-                    placeholder = binding.attachmentContainer.videoPlaceholder,
-                )
+            override fun onVideo(post: Post) {
+                val url = post.attachment?.url ?: return
+                playbackManager.togglePlay(postId = post.id, url = url, isVideo = true)
+            }
+
+            override fun onSeek(post: Post, progress: Long) {
+                playbackManager.seekTo(postId = post.id, position = progress)
             }
 
             override fun onPost(post: Post) {
@@ -125,7 +118,7 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
         }
     }
 
-    private fun observeViewModel() {
+    private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { viewModel.data.collectLatest(adapter::submitData) }
@@ -164,33 +157,24 @@ class PostsFragment : Fragment(R.layout.fragment_posts) {
                 }
 
                 launch {
+                    playbackManager.errorFlow.collectLatest { error ->
+                        viewModel.handleError(error)
+                    }
+                }
+
+                launch {
                     viewModel.state.collectLatest { state ->
-                        if (state.error && state.errorMessage != null) {
-                            error(state.errorMessage)
+                        state.errorType?.let { errorType ->
+                            Snackbar.make(
+                                binding.root,
+                                errorType.messageRes,
+                                Snackbar.LENGTH_LONG
+                            ).show()
                             viewModel.resetState()
                         }
                     }
                 }
             }
         }
-    }
-
-    private fun error(error: String) {
-        val messageResId = when (error) {
-            "error_playback" -> R.string.error_playback
-            "error_file_too_large" -> R.string.error_file_too_large
-            "error_file_access" -> R.string.error_file_access
-            "error_network" -> R.string.error_network
-            "error_db" -> R.string.error_db
-            "403" -> R.string.authorization_is_required_for_this_action
-            "404" -> R.string.post_not_found
-            else -> R.string.error_unknown
-        }
-
-        Snackbar.make(
-            binding.root,
-            getString(messageResId),
-            Snackbar.LENGTH_LONG
-        ).show()
     }
 }

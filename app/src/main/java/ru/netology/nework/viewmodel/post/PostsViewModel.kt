@@ -14,11 +14,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.netology.nework.auth.AppAuth
 import ru.netology.nework.auth.AuthState
 import ru.netology.nework.dto.Post
-import ru.netology.nework.error.AppError
+import ru.netology.nework.error.ErrorType
+import ru.netology.nework.error.toErrorType
 import ru.netology.nework.model.AppModelState
 import ru.netology.nework.repository.post.PostRepository
 import javax.inject.Inject
@@ -75,8 +77,21 @@ class PostsViewModel @Inject constructor(
     }
 
     fun handleError(exception: Throwable) {
-        val error = AppError.from(exception)
-        _state.value = AppModelState(error = true, errorMessage = error.code)
+        val errorType = exception.toErrorType { status ->
+            when (status) {
+                403 -> ErrorType.AUTH_REQUIRED
+                404 -> ErrorType.POST_NOT_FOUND
+                else -> ErrorType.UNKNOWN
+            }
+        }
+        _state.update { state ->
+            state.copy(
+                loading = false,
+                refreshing = false,
+                error = true,
+                errorType = errorType
+            )
+        }
     }
 
     fun resetState() {

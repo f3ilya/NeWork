@@ -53,7 +53,7 @@ class JobsAdapter(
                 }
                 date.text = dateText
                 position.text = job.position
-                if (job.link != null) {
+                if (!job.link.isNullOrEmpty()) {
                     link.isVisible = true
                     link.text = job.link
                 } else link.isVisible = false

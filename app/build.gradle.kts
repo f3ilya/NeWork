@@ -85,4 +85,5 @@ dependencies {
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.maps.mobile)
     implementation(libs.ucrop)
+    debugImplementation(libs.leakcanary.android)
 }

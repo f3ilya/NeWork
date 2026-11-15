@@ -36,7 +36,7 @@
     <string name="description_take_photo">Сделать фото</string>
     <string name="remove">Удалить</string>
     <string name="the_user_is_already_registered">Пользователь уже зарегистрирован.</string>
-    <string name="incorrect_photo_format">Неправильный формат фото.</string>
+    <string name="invalid_photo_format">Неправильный формат фото.</string>
     <string name="description_avatar">Аватар</string>
     <string name="share">Поделиться</string>
     <string name="save">Сохранить</string>
@@ -66,7 +66,7 @@
     <string name="remove_attachment">Удалить вложение</string>
     <string name="menu_edit">Редактировать</string>
     <string name="menu_remove">Удалить</string>
-    <string name="incorrect_attachment_format">Неправильный формат вложения.</string>
+    <string name="invalid_attachment_format">Неправильный формат вложения.</string>
     <string name="select_a_picture">Выберите изображение</string>
     <string name="authorization_is_required_message">Для выполнения этого действия необходимо войти в аккаунт. Перейти на экран входа?</string>
     <string name="select_a_media">Выберите медиафайл</string>
@@ -94,7 +94,7 @@
     <string name="select_a_date">Выберите дату</string>
     <string name="name_cannot_be_empty_job">Название не должно быть пустым</string>
     <string name="position_cannot_be_empty_job">Должность не должна быть пустой</string>
-    <string name="incorrect_link_format_job">Неверный формат ссылки</string>
+    <string name="invalid_link_format_job">Неверный формат ссылки</string>
     <string name="start_date_cannot_be_empty">Дата начала не может быть пустой</string>
     <string name="create">Создать</string>
     <string name="end_date_job">Дата окончания</string>

@@ -5,6 +5,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import ru.netology.nework.model.MapModel
 import javax.inject.Inject
 
@@ -14,6 +15,11 @@ class MapViewModel @Inject constructor() : ViewModel() {
     val map: StateFlow<MapModel> = _map.asStateFlow()
 
     fun changeMap(lat: Double, long: Double) {
-        _map.value = MapModel(lat = lat, long = long)
+        _map.update { model ->
+            model.copy(
+                lat = lat,
+                long = long
+            )
+        }
     }
 }

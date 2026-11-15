@@ -36,7 +36,7 @@ class NewJobFragment : Fragment(R.layout.fragment_new_job), OnSaveActionListener
         super.onViewCreated(view, savedInstanceState)
 
         setupListeners()
-        observeViewModel()
+        setupObservers()
     }
 
     private fun setupListeners() {
@@ -71,7 +71,7 @@ class NewJobFragment : Fragment(R.layout.fragment_new_job), OnSaveActionListener
         }
     }
 
-    private fun observeViewModel() {
+    private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch { viewModel.edited.collectLatest { bindDate(it) } }
@@ -80,8 +80,12 @@ class NewJobFragment : Fragment(R.layout.fragment_new_job), OnSaveActionListener
 
                 launch {
                     viewModel.state.collectLatest { state ->
-                        if (state.error && state.errorMessage != null) {
-                            error(state.errorMessage)
+                        state.errorType?.let { errorType ->
+                            Snackbar.make(
+                                binding.root,
+                                errorType.messageRes,
+                                Snackbar.LENGTH_LONG
+                            ).show()
                             viewModel.resetState()
                         }
                     }
@@ -143,7 +147,7 @@ class NewJobFragment : Fragment(R.layout.fragment_new_job), OnSaveActionListener
             if (!etLink.text.isNullOrBlank()
                 && !Patterns.WEB_URL.matcher(etLink.text.toString()).matches()
             ) {
-                tilLink.error = getString(R.string.incorrect_link_format_job)
+                tilLink.error = getString(R.string.invalid_link_format_job)
                 isValid = false
             }
 
@@ -172,25 +176,10 @@ class NewJobFragment : Fragment(R.layout.fragment_new_job), OnSaveActionListener
                 viewModel.changeEdited(
                     name = etName.text.toString().trim(),
                     position = etPosition.text.toString().trim(),
-                    link = etLink.text.toString().trim()
+                    link = if (etLink.text.isNullOrBlank()) null else etLink.text.toString().trim()
                 )
                 viewModel.saveJob()
             }
         }
-    }
-
-    private fun error(error: String) {
-        val messageResId = when (error) {
-            "error_network" -> R.string.error_network
-            "error_db" -> R.string.error_db
-            "403" -> R.string.authorization_is_required_for_this_action
-            else -> R.string.error_unknown
-        }
-
-        Snackbar.make(
-            binding.root,
-            getString(messageResId),
-            Snackbar.LENGTH_LONG
-        ).show()
     }
 }

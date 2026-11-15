@@ -41,7 +41,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         super.onViewCreated(view, savedInstanceState)
 
         setupListeners()
-        observeViewModel()
+        setupObservers()
     }
 
     private fun setupListeners() {
@@ -79,7 +79,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         }
     }
 
-    private fun observeViewModel() {
+    private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -101,8 +101,12 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
                 launch {
                     viewModel.state.collectLatest { state ->
-                        if (state.error && state.errorMessage != null) {
-                            error(state.errorMessage)
+                        state.errorType?.let { errorType ->
+                            Snackbar.make(
+                                binding.root,
+                                errorType.messageRes,
+                                Snackbar.LENGTH_LONG
+                            ).show()
                             viewModel.resetState()
                         }
                     }
@@ -143,21 +147,5 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         }
 
         return isValid
-    }
-
-    private fun error(error: String) {
-        val messageResId = when (error) {
-            "error_network" -> R.string.error_network
-            "error_db" -> R.string.error_db
-            "403" -> R.string.authorization_is_required_for_this_action
-            "404" -> R.string.post_not_found
-            else -> R.string.error_unknown
-        }
-
-        Snackbar.make(
-            binding.root,
-            getString(messageResId),
-            Snackbar.LENGTH_LONG
-        ).show()
     }
 }

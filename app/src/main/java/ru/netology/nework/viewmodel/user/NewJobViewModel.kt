@@ -103,8 +103,8 @@ class NewJobViewModel @Inject constructor(
     }
 
     fun handleError(exception: Throwable) {
-        val errorType = exception.toErrorType { status ->
-            when (status) {
+        val errorType = exception.toErrorType { code ->
+            when (code) {
                 403 -> ErrorType.AUTH_REQUIRED
                 else -> ErrorType.UNKNOWN
             }

@@ -98,8 +98,8 @@ class UsersViewModel @Inject constructor(
     }
 
     fun handleError(exception: Throwable) {
-        val errorType = exception.toErrorType { status ->
-            when (status) {
+        val errorType = exception.toErrorType { code ->
+            when (code) {
                 404 -> ErrorType.USER_NOT_FOUND
                 else -> ErrorType.UNKNOWN
             }

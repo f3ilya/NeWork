@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.netology.nework.auth.AppAuth
 import ru.netology.nework.dto.Post
+import ru.netology.nework.error.ErrorType
 import ru.netology.nework.error.toErrorType
 import ru.netology.nework.fragment.user.WallFragmentArgs
 import ru.netology.nework.model.AppModelState
@@ -62,7 +63,13 @@ class WallViewModel @Inject constructor(
     }
 
     fun handleError(exception: Throwable) {
-        val errorType = exception.toErrorType()
+        val errorType = exception.toErrorType { code ->
+            when (code) {
+                403 -> ErrorType.AUTH_REQUIRED
+                404 -> ErrorType.POST_NOT_FOUND
+                else -> ErrorType.UNKNOWN
+            }
+        }
         _state.update { state ->
             state.copy(
                 loading = false,

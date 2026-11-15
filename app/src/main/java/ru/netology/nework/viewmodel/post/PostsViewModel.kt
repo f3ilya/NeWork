@@ -77,8 +77,8 @@ class PostsViewModel @Inject constructor(
     }
 
     fun handleError(exception: Throwable) {
-        val errorType = exception.toErrorType { status ->
-            when (status) {
+        val errorType = exception.toErrorType { code ->
+            when (code) {
                 403 -> ErrorType.AUTH_REQUIRED
                 404 -> ErrorType.POST_NOT_FOUND
                 else -> ErrorType.UNKNOWN

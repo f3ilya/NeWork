@@ -58,8 +58,8 @@ class AuthViewModel @Inject constructor(
     }
 
     fun handleError(exception: Throwable) {
-        val errorType = exception.toErrorType { status ->
-            when (status) {
+        val errorType = exception.toErrorType { code ->
+            when (code) {
                 400 -> ErrorType.INVALID_PASSWORD
                 404 -> ErrorType.USER_NOT_REGISTRATION
                 else -> ErrorType.UNKNOWN

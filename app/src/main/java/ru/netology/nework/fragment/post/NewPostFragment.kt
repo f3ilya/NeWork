@@ -2,7 +2,6 @@ package ru.netology.nework.fragment.post
 
 import android.os.Bundle
 import android.view.View
-import android.widget.SeekBar
 import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
@@ -23,19 +22,22 @@ import ru.netology.nework.R
 import ru.netology.nework.databinding.FragmentNewPostBinding
 import ru.netology.nework.dto.AttachmentType
 import ru.netology.nework.dto.Coordinates
+import ru.netology.nework.dto.Post
 import ru.netology.nework.dto.UserResponse
+import ru.netology.nework.error.AppError
+import ru.netology.nework.extensions.bindUserSection
 import ru.netology.nework.extensions.hideKeyboard
 import ru.netology.nework.extensions.load
 import ru.netology.nework.extensions.registerImagePickerLauncher
 import ru.netology.nework.extensions.registerMediaFilePickerLauncher
-import ru.netology.nework.extensions.renderAvatarStack
+import ru.netology.nework.extensions.renderPlayback
+import ru.netology.nework.extensions.setupMediaListeners
 import ru.netology.nework.extensions.showMediaSelectionDialog
 import ru.netology.nework.extensions.showPhotoSelectionDialog
 import ru.netology.nework.extensions.uriToFile
 import ru.netology.nework.map.YandexMapManager
 import ru.netology.nework.media.MediaPlaybackManager
 import ru.netology.nework.media.PlaybackState
-import ru.netology.nework.model.AvatarModel
 import ru.netology.nework.model.MediaModel
 import ru.netology.nework.util.FragmentMode
 import ru.netology.nework.util.OnSaveActionListener
@@ -47,16 +49,6 @@ import javax.inject.Inject
 class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListener {
     private val binding by viewBinding(FragmentNewPostBinding::bind)
     private val viewModel: NewPostViewModel by viewModels()
-    private var currentMediaAttachmentType: AttachmentType? = null
-
-    @Inject
-    lateinit var playbackManager: MediaPlaybackManager
-
-    @Inject
-    lateinit var yandexMapManager: YandexMapManager
-
-    private var isUserSeeking = false
-
     private val pickPhotoLauncher = registerImagePickerLauncher(
         onSuccess = { uri, file ->
             playbackManager.stopAndReset()
@@ -67,7 +59,6 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
             viewModel.handleError(error)
         }
     )
-
     private val pickMediaLauncher = registerMediaFilePickerLauncher(
         onSuccess = { uri ->
             runCatching {
@@ -83,6 +74,14 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
             viewModel.handleError(error)
         }
     )
+    private var currentMediaAttachmentType: AttachmentType? = null
+    private var isUserSeeking = false
+
+    @Inject
+    lateinit var playbackManager: MediaPlaybackManager
+
+    @Inject
+    lateinit var yandexMapManager: YandexMapManager
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -150,25 +149,6 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
             edit.doAfterTextChanged { text ->
                 viewModel.changeContent(text.toString())
             }
-
-            attachmentContainer.audioSeekBar.setOnSeekBarChangeListener(object :
-                SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(seekBar: SeekBar?, p1: Int, p2: Boolean) {}
-
-                override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                    isUserSeeking = true
-                }
-
-                override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                    isUserSeeking = false
-                    seekBar?.let {
-                        playbackManager.seekTo(
-                            postId = 0L,
-                            position = it.progress.toLong()
-                        )
-                    }
-                }
-            })
         }
     }
 
@@ -185,7 +165,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
 
                 launch { viewModel.media.collectLatest { bindMedia(it) } }
 
-                launch { viewModel.users.collectLatest { bindMentioned(it) } }
+                launch { viewModel.mentioned.collectLatest { bindMentioned(it) } }
 
                 launch {
                     viewModel.editedPost.collectLatest { post ->
@@ -223,7 +203,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
                         combine(
                             viewModel.editedPost,
                             viewModel.media,
-                            viewModel.users
+                            viewModel.mentioned
                         ) { post, _, _ ->
                             post.id == postId
                         }.first { isLoaded -> isLoaded }
@@ -252,35 +232,21 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
 
     private fun bindMentioned(users: List<UserResponse>) {
         with(binding) {
-            if (users.isNotEmpty()) {
-                mentioned.isVisible = true
-                mentionedContainer.mentionedIcon.text = users.size.toString()
-                val mentionModels = users.map { user ->
-                    AvatarModel(
-                        userId = user.id,
-                        avatarUrl = user.avatar
-                    )
+            mentioned.isVisible = users.isNotEmpty()
+            mentionedContainer.bindUserSection(
+                mode = FragmentMode.MENTIONED,
+                users = users,
+                onAvatarClick = { userId ->
+                    val action = NewPostFragmentDirections
+                        .actionNewPostFragmentToDetailedUserFragment(userId)
+                    findNavController().navigate(action)
+                },
+                onMoreClick = { mode, userIds ->
+                    val action = NewPostFragmentDirections
+                        .actionNewPostFragmentToDetailedUsersListFragment(mode, userIds)
+                    findNavController().navigate(action)
                 }
-                mentionedContainer.avatarMentionedStack.renderAvatarStack(
-                    models = mentionModels,
-                    moreButton = mentionedContainer.moreMentioned,
-                    onAvatarClickListener = { userId ->
-                        val action =
-                            NewPostFragmentDirections.actionNewPostFragmentToDetailedUserFragment(
-                                userId
-                            )
-                        findNavController().navigate(action)
-                    },
-                    onMoreClickListener = {
-                        val action =
-                            NewPostFragmentDirections.actionNewPostFragmentToDetailedUsersListFragment(
-                                fragmentMode = FragmentMode.MENTIONED,
-                                userIds = users.map { it.id }.toLongArray()
-                            )
-                        findNavController().navigate(action)
-                    }
-                )
-            } else mentioned.isVisible = false
+            )
         }
     }
 
@@ -304,62 +270,56 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post), OnSaveActionListen
             attachmentContainer.audioAttachment.isVisible = mediaModel.type == AttachmentType.AUDIO
             attachmentContainer.videoContainer.isVisible = mediaModel.type == AttachmentType.VIDEO
             attachmentContainer.videoAttachment.player = null
-            when (mediaModel.type) {
-                AttachmentType.IMAGE -> {
-                    attachmentContainer.imageAttachment.load(mediaModel.uri.toString())
-                }
-
-                AttachmentType.VIDEO -> {
-                    attachmentContainer.videoContainer.setOnClickListener {
-                        playbackManager.togglePlay(
-                            postId = 0L,
-                            url = mediaModel.uri.toString(),
-                            isVideo = true
-                        )
-                    }
-                }
-
-                AttachmentType.AUDIO -> {
-                    attachmentContainer.audioPlayPause.setOnClickListener {
-                        playbackManager.togglePlay(
-                            postId = 0L,
-                            url = mediaModel.uri.toString(),
-                            isVideo = false
-                        )
-                    }
-                }
-
-                null -> Unit
+            if (mediaModel.type == AttachmentType.IMAGE) {
+                attachmentContainer.imageAttachment.load(mediaModel.uri.toString())
             }
+            attachmentContainer.setupMediaListeners(
+                onVideoClick = {
+                    playbackManager.togglePlay(
+                        id = 0L,
+                        url = mediaModel.uri.toString(),
+                        isVideo = true
+                    )
+                },
+                onAudioClick = {
+                    playbackManager.togglePlay(
+                        id = 0L,
+                        url = mediaModel.uri.toString(),
+                        isVideo = false
+                    )
+                },
+                onSeekStart = { isUserSeeking = true },
+                onSeekStop = { progress ->
+                    isUserSeeking = false
+                    playbackManager.seekTo(id = 0L, position = progress)
+                }
+            )
         }
     }
 
     private fun renderPlaybackState(state: PlaybackState) {
         val attachmentType = viewModel.media.value.type ?: return
-        val isActive = state.currentPostId != null
-        with(binding.attachmentContainer) {
-            when (attachmentType) {
-                AttachmentType.VIDEO -> {
-                    videoPlaceholder.isVisible = !isActive
-                    videoAttachment.isVisible = isActive
-                    videoAttachment.player = if (isActive) playbackManager.exoPlayer else null
-                }
+        binding.attachmentContainer.renderPlayback(
+            type = attachmentType,
+            isActive = state.currentId != null,
+            state = state,
+            exoPlayer = playbackManager.exoPlayer,
+            isUserSeeking = isUserSeeking
+        )
+    }
 
-                AttachmentType.AUDIO -> {
-                    audioPlayPause.isChecked = isActive && state.isPlaying
-                    audioSeekBar.max = if (isActive) state.duration.toInt() else 0
-                    if (!isUserSeeking) {
-                        audioSeekBar.progress = if (isActive) state.progress.toInt() else 0
-                    }
-                }
-
-                else -> Unit
-            }
+    private fun isValid(post: Post): Boolean {
+        if (post.content.isBlank() && viewModel.media.value.type == null) {
+            viewModel.handleError(AppError.EmptyContentOrAttachmentError())
+            return false
         }
+        return true
     }
 
     override fun onSaveAction() {
         hideKeyboard()
-        viewModel.save()
+        if (isValid(viewModel.editedPost.value)) {
+            viewModel.save()
+        }
     }
 }

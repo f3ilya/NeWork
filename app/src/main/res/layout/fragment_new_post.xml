@@ -7,7 +7,6 @@
     android:layout_height="match_parent">
 
     <androidx.core.widget.NestedScrollView
-        android:id="@+id/nestedScroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingBottom="?attr/actionBarSize">
@@ -80,7 +79,7 @@
 
                 <include
                     android:id="@+id/mentionedContainer"
-                    layout="@layout/layout_mentioned_container"
+                    layout="@layout/layout_user_section_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp" />
@@ -133,7 +132,6 @@
     </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.dockedtoolbar.DockedToolbarLayout
-        android:id="@+id/docked_toolbar"
         style="@style/Widget.Material3.DockedToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -189,7 +187,7 @@
                     style="?attr/materialIconButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:icon="@drawable/people_24" />
+                    app:icon="@drawable/ic_people_filled_24" />
             </FrameLayout>
 
             <FrameLayout
@@ -219,7 +217,7 @@
         android:clickable="true"
         android:focusable="true"
         android:visibility="gone"
-        tools:visibility="visible">
+        tools:visibility="gone">
 
         <ProgressBar
             android:layout_width="wrap_content"

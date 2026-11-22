@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -36,6 +35,7 @@ import ru.netology.nework.fragment.post.NewPostFragmentArgs
 import ru.netology.nework.model.AppModelState
 import ru.netology.nework.model.MediaModel
 import ru.netology.nework.repository.post.PostRepository
+import ru.netology.nework.repository.user.UserRepository
 import java.io.File
 import javax.inject.Inject
 import kotlin.time.Clock
@@ -65,7 +65,8 @@ private val noMedia = MediaModel()
 @HiltViewModel
 class NewPostViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: PostRepository,
+    private val postRepository: PostRepository,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
     private val _state = MutableStateFlow(AppModelState())
     val state: StateFlow<AppModelState> = _state.asStateFlow()
@@ -82,18 +83,14 @@ class NewPostViewModel @Inject constructor(
     val args = NewPostFragmentArgs.fromSavedStateHandle(savedStateHandle)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val users: StateFlow<List<UserResponse>> = _editedPost.map { it.mentionIds }
+    val mentioned: StateFlow<List<UserResponse>> = _editedPost.map { it.mentionIds }
         .distinctUntilChanged()
         .flatMapLatest { ids ->
-            if (ids.isEmpty()) {
-                flowOf(emptyList())
-            } else {
-                repository.getUsersByIds(_editedPost.value.mentionIds)
-                    .catch { exception -> handleError(exception) }
-            }
+            userRepository.getUsersByIds(ids)
+                .catch { exception -> handleError(exception) }
         }.stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(0, 0),
+            started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList()
         )
 
@@ -103,7 +100,7 @@ class NewPostViewModel @Inject constructor(
             _editedPost.value = empty
         } else {
             viewModelScope.launch {
-                repository.getPostById(postId)
+                postRepository.getPostById(postId)
                     .catch { exception -> handleError(exception) }
                     .collect { post ->
                         _editedPost.value = post
@@ -133,15 +130,15 @@ class NewPostViewModel @Inject constructor(
                     val timePublished = post.published.ifEmpty { Clock.System.now().toString() }
                     if (mediaState.file == null) {
                         val updatedPost = post.copy(published = timePublished)
-                        repository.savePost(updatedPost)
+                        postRepository.savePost(updatedPost)
                     } else {
                         val attachmentType = mediaState.type ?: throw AppError.UnknownError()
-                        val media = repository.saveMedia(mediaState.file)
+                        val media = postRepository.saveMedia(mediaState.file)
                         val updatedPost = post.copy(
                             published = timePublished,
                             attachment = Attachment(url = media.url, type = attachmentType)
                         )
-                        repository.savePost(updatedPost)
+                        postRepository.savePost(updatedPost)
                     }
                 }.onSuccess {
                     resetState()

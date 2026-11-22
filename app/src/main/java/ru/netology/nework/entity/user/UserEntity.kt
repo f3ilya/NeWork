@@ -11,23 +11,22 @@ data class UserEntity(
     val login: String,
     val name: String,
     val avatar: String?,
-) {
-    fun toDto() = UserResponse(
-        id = id,
-        login = login,
-        name = name,
-        avatar = avatar
-    )
+)
 
-    companion object {
-        fun fromDto(dto: UserResponse) = UserEntity(
-            id = dto.id,
-            login = dto.login,
-            name = dto.name,
-            avatar = dto.avatar
-        )
-    }
-}
+fun UserEntity.toDto() = UserResponse(
+    id = id,
+    login = login,
+    name = name,
+    avatar = avatar
+)
+
+fun UserResponse.toEntity() = UserEntity(
+    id = id,
+    login = login,
+    name = name,
+    avatar = avatar
+)
+
 
 fun List<UserEntity>.toDto(): List<UserResponse> = map(UserEntity::toDto)
-fun List<UserResponse>.toEntity(): List<UserEntity> = map(UserEntity::fromDto)
+fun List<UserResponse>.toEntity(): List<UserEntity> = map(UserResponse::toEntity)

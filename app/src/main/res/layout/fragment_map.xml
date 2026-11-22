@@ -23,7 +23,6 @@
         android:layout_gravity="bottom|end" />
 
     <LinearLayout
-        android:id="@+id/zoomContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/common_spacing"

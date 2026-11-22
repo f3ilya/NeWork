@@ -62,7 +62,6 @@
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/position"
-            tools:text="https://www.figma.com/design/8z1sV6KIf6Sc1y02TrY2XS/Nmedia?node-id=0-1p=ft=CBNW6GgCTLXWhfco-0"
             tools:visibility="visible" />
 
         <com.google.android.material.button.MaterialButton

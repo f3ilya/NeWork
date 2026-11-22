@@ -54,7 +54,7 @@ class PostRemoteMediator @Inject constructor(
                     LoadType.REFRESH -> {
                         postRemoteKeyDao.removeAll()
                         postDao.removeAll()
-                        postRemoteKeyDao.insert(
+                        postRemoteKeyDao.upsert(
                             listOf(
                                 PostRemoteKeyEntity(
                                     type = PostRemoteKeyEntity.KeyType.AFTER,
@@ -71,7 +71,7 @@ class PostRemoteMediator @Inject constructor(
                     LoadType.PREPEND -> {}
 
                     LoadType.APPEND -> {
-                        postRemoteKeyDao.insert(
+                        postRemoteKeyDao.upsert(
                             PostRemoteKeyEntity(
                                 type = PostRemoteKeyEntity.KeyType.BEFORE,
                                 id = body.last().id
@@ -79,7 +79,7 @@ class PostRemoteMediator @Inject constructor(
                         )
                     }
                 }
-                postDao.insert(body.toEntity())
+                postDao.upsert(body.toEntity())
             }
             return MediatorResult.Success(endOfPaginationReached = false)
         } catch (exception: Exception) {

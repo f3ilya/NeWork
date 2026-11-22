@@ -10,19 +10,19 @@ data class Event(
     @SerializedName("author")
     val author: String,
     @SerializedName("authorJob")
-    val authorJob: String,
+    val authorJob: String? = null,
     @SerializedName("authorAvatar")
-    val authorAvatar: String,
+    val authorAvatar: String? = null,
     @SerializedName("content")
     val content: String,
     @SerializedName("datetime")
     val datetime: String,
     @SerializedName("published")
     val published: String,
-    @SerializedName("coordinates")
-    val coordinates: Coordinates,
+    @Suppress("SpellCheckingInspection") @SerializedName("coords")
+    val coordinates: Coordinates? = null,
     @SerializedName("type")
-    val type: String,
+    val type: EventType,
     @SerializedName("likeOwnerIds")
     val likeOwnerIds: List<Long>,
     @SerializedName("likedByMe")
@@ -34,14 +34,15 @@ data class Event(
     @SerializedName("participatedByMe")
     val participatedByMe: Boolean,
     @SerializedName("attachment")
-    val attachment: Attachment,
+    val attachment: Attachment? = null,
     @SerializedName("link")
-    val link: String,
+    val link: String? = null,
     @SerializedName("users")
-    val users: List<UserPreview>,
+    val users: Map<String, UserPreview>,
+    val ownedByMe: Boolean = false,
 )
 
-enum class EventsType {
+enum class EventType {
     @SerializedName("OFFLINE")
     OFFLINE,
 

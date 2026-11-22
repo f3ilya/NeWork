@@ -19,8 +19,8 @@ import ru.netology.nework.dto.Job
 import ru.netology.nework.dto.Post
 import ru.netology.nework.dto.UserResponse
 import ru.netology.nework.entity.post.PostEntity
-import ru.netology.nework.entity.user.JobEntity
-import ru.netology.nework.entity.user.UserEntity
+import ru.netology.nework.entity.post.toDto
+import ru.netology.nework.entity.post.toEntity
 import ru.netology.nework.entity.user.toDto
 import ru.netology.nework.entity.user.toEntity
 import ru.netology.nework.extensions.getOrThrow
@@ -45,7 +45,7 @@ class UserRepositoryImpl @Inject constructor(
             remoteMediator = wallRemoteMediator.create(authorId, isMyProfile),
             pagingSourceFactory = { postDao.pagingSourceByAuthorId(authorId) }
         ).flow.map { pagingData ->
-            pagingData.map { it.toDto() }
+            pagingData.map(PostEntity::toDto)
         }
 
     override fun getUsersAll(): Flow<List<UserResponse>> =
@@ -75,7 +75,7 @@ class UserRepositoryImpl @Inject constructor(
             else -> apiService.likeAuthorWall(authorId, postId)
         }
         response.getOrThrow().let { post ->
-            postDao.insert(PostEntity.fromDto(post))
+            postDao.upsert(post.toEntity())
         }
     }
 
@@ -83,7 +83,7 @@ class UserRepositoryImpl @Inject constructor(
         if (ids.isEmpty() || ids.size != userDao.getExistingIds(ids).size) {
             val response = apiService.getAllUsers()
             response.getOrThrow().let { users ->
-                userDao.insert(users.toEntity())
+                userDao.upsert(users.toEntity())
             }
         }
     }
@@ -92,14 +92,13 @@ class UserRepositoryImpl @Inject constructor(
         if (!userDao.isUserExists(id)) {
             val response = apiService.getUser(id)
             response.getOrThrow().let { user ->
-                userDao.insert(UserEntity.fromDto(user))
+                userDao.upsert(user.toEntity())
             }
         }
     }
 
-    override suspend fun refreshJobs(ownerId: Long) {
-        val myId = appAuth.authStateFlow.value.id
-        val response = if (ownerId == myId) {
+    override suspend fun refreshJobs(ownerId: Long, isMyProfile: Boolean) {
+        val response = if (isMyProfile) {
             apiService.getMyJobs()
         } else {
             apiService.getUserJobs(ownerId)
@@ -107,7 +106,7 @@ class UserRepositoryImpl @Inject constructor(
         response.getOrThrow().let { jobs ->
             appDb.withTransaction {
                 jobDao.removeJobsByOwnerId(ownerId)
-                jobDao.insert(jobs.toEntity(ownerId))
+                jobDao.upsert(jobs.toEntity(ownerId))
             }
         }
     }
@@ -116,7 +115,7 @@ class UserRepositoryImpl @Inject constructor(
         val myId = appAuth.authStateFlow.value.id
         val response = apiService.saveJob(job)
         response.getOrThrow().let { job ->
-            jobDao.insert(JobEntity.fromDto(job, myId))
+            jobDao.upsert(job.toEntity(myId))
         }
     }
 

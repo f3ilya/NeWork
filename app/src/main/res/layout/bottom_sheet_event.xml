@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingBottom="32dp">
+
+    <com.google.android.material.bottomsheet.BottomSheetDragHandleView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilDate"
+        style="@style/ThemeOverlay.Material3.TextInputEditText.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/event_date_hint"
+        app:endIconContentDescription="@string/select_date"
+        app:endIconDrawable="@drawable/ic_event_24"
+        app:endIconMode="custom"
+        app:helperText="@string/event_date_helper_text">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:cursorVisible="false"
+            android:focusable="false" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="@string/event_type_title"
+        android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+    <RadioGroup
+        android:id="@+id/typeRadioGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp">
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/radioOnline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="@string/online"
+            android:textStyle="bold" />
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/radioOffline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/offline"
+            android:textStyle="bold" />
+
+    </RadioGroup>
+
+</LinearLayout>

@@ -24,7 +24,7 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
 data class PlaybackState(
-    val currentPostId: Long? = null,
+    val currentId: Long? = null,
     val isPlaying: Boolean = false,
     val progress: Long = 0L,
     val duration: Long = 0L,
@@ -73,7 +73,7 @@ class MediaPlaybackManager @Inject constructor(
 
     private fun updateState() {
         val player = exoPlayer ?: return
-        if (_playbackState.value.currentPostId == null) return
+        if (_playbackState.value.currentId == null) return
         _playbackState.update { state ->
             state.copy(
                 isPlaying = player.isPlaying,
@@ -95,9 +95,9 @@ class MediaPlaybackManager @Inject constructor(
         }
     }
 
-    fun togglePlay(postId: Long, url: String, isVideo: Boolean = false) {
+    fun togglePlay(id: Long, url: String, isVideo: Boolean = false) {
         val player = exoPlayer ?: return
-        if (_playbackState.value.currentPostId == postId) {
+        if (_playbackState.value.currentId == id) {
             if (!isVideo) {
                 if (player.isPlaying) player.pause() else player.play()
             }
@@ -106,7 +106,7 @@ class MediaPlaybackManager @Inject constructor(
 
         stopAndReset()
         _playbackState.value = PlaybackState(
-            currentPostId = postId,
+            currentId = id,
             isVideo = isVideo
         )
         player.setMediaItem(MediaItem.fromUri(url))
@@ -114,9 +114,9 @@ class MediaPlaybackManager @Inject constructor(
         player.play()
     }
 
-    fun seekTo(postId: Long, position: Long) {
+    fun seekTo(id: Long, position: Long) {
         val player = exoPlayer ?: return
-        if (_playbackState.value.currentPostId == postId) {
+        if (_playbackState.value.currentId == id) {
             player.seekTo(position)
             updateState()
         }

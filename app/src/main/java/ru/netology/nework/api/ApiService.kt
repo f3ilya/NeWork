@@ -18,6 +18,7 @@ import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 import ru.netology.nework.BuildConfig
+import ru.netology.nework.dto.Event
 import ru.netology.nework.dto.Job
 import ru.netology.nework.dto.Media
 import ru.netology.nework.dto.Post
@@ -93,6 +94,35 @@ interface ApiService {
 
     @DELETE("posts/{id}/likes")
     suspend fun dislikePost(@Path("id") id: Long): Response<Post>
+
+    /** === EVENTS === **/
+
+    @POST("events")
+    suspend fun saveEvent(@Body event: Event): Response<Event>
+
+    @DELETE("events/{id}")
+    suspend fun removeEvent(@Path("id") id: Long): Response<Unit>
+
+    @GET("events/{id}/before")
+    suspend fun getBeforeEvents(
+        @Path("id") id: Long,
+        @Query("count") count: Int
+    ): Response<List<Event>>
+
+    @GET("events/latest")
+    suspend fun getLatestEvents(@Query("count") count: Int): Response<List<Event>>
+
+    @POST("events/{id}/likes")
+    suspend fun likeEvent(@Path("id") id: Long): Response<Event>
+
+    @DELETE("events/{id}/likes")
+    suspend fun dislikeEvent(@Path("id") id: Long): Response<Event>
+
+    @POST("events/{id}/participants")
+    suspend fun participantEvent(@Path("id") id: Long): Response<Event>
+
+    @DELETE("events/{id}/participants")
+    suspend fun nonParticipantEvent(@Path("id") id: Long): Response<Event>
 
     /** === USERS === **/
 

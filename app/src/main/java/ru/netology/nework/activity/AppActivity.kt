@@ -25,6 +25,7 @@ import ru.netology.nework.databinding.ActivityAppBinding
 import ru.netology.nework.extensions.load
 import ru.netology.nework.extensions.shareIntent
 import ru.netology.nework.extensions.showConfirmationDialog
+import ru.netology.nework.fragment.event.DetailedEventFragmentArgs
 import ru.netology.nework.fragment.post.DetailedPostFragmentArgs
 import ru.netology.nework.fragment.user.DetailedUserFragmentArgs
 import ru.netology.nework.fragment.user.UsersFragmentArgs
@@ -87,12 +88,12 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                     }
                     setOnMenuItemClickListener { item ->
                         when (item.itemId) {
-                            R.id.signin -> {
+                            R.id.sign_in -> {
                                 navController.navigate(R.id.authenticationFragment)
                                 true
                             }
 
-                            R.id.signup -> {
+                            R.id.sign_up -> {
                                 navController.navigate(R.id.registrationFragment)
                                 true
                             }
@@ -104,7 +105,7 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                                 true
                             }
 
-                            R.id.signout -> {
+                            R.id.sign_out -> {
                                 showConfirmationDialog(
                                     title = getString(R.string.exiting_the_app),
                                     message = getString(R.string.are_you_sure_you_want_to_get_out),
@@ -129,7 +130,7 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                     R.id.postsFragment, R.id.eventsFragment, R.id.usersFragment ->
                         showBottomNavAndAvatar(bottomNavigation)
 
-                    R.id.detailedPostFragment, R.id.detailedEventFragment -> {
+                    R.id.detailedPostFragment -> {
                         hideBottomNavAndAvatar(bottomNavigation)
                         toolbar.inflateMenu(R.menu.menu_share)
                         toolbar.setOnMenuItemClickListener { item ->
@@ -137,6 +138,20 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                                 val args =
                                     arguments?.let { DetailedPostFragmentArgs.fromBundle(it) }
                                 val content = args?.postContent ?: ""
+                                if (content.isNotBlank()) shareIntent(content)
+                                true
+                            } else false
+                        }
+                    }
+
+                    R.id.detailedEventFragment -> {
+                        hideBottomNavAndAvatar(bottomNavigation)
+                        toolbar.inflateMenu(R.menu.menu_share)
+                        toolbar.setOnMenuItemClickListener { item ->
+                            if (item.itemId == R.id.action_share) {
+                                val args =
+                                    arguments?.let { DetailedEventFragmentArgs.fromBundle(it) }
+                                val content = args?.eventContent ?: ""
                                 if (content.isNotBlank()) shareIntent(content)
                                 true
                             } else false
@@ -160,14 +175,7 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                         hideBottomNavAndAvatar(bottomNavigation)
                         val args = arguments?.let { UsersFragmentArgs.fromBundle(it) }
                         val mode = args?.fragmentMode ?: FragmentMode.USERS
-                        toolbar.title = when (mode) {
-                            FragmentMode.LIKERS -> getString(R.string.likers)
-                            FragmentMode.MENTIONED -> getString(R.string.mentioned)
-                            FragmentMode.SPEAKERS -> getString(R.string.speakers)
-                            FragmentMode.PARTICIPANTS -> getString(R.string.participants)
-                            FragmentMode.SELECTED -> getString(R.string.select_users)
-                            FragmentMode.USERS -> getString(R.string.app_name)
-                        }
+                        toolbar.setTitle(mode.titleRes)
                         if (mode == FragmentMode.SELECTED) {
                             toolbar.inflateMenu(R.menu.menu_save)
                             toolbar.setOnMenuItemClickListener { item ->

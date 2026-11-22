@@ -69,15 +69,22 @@
         android:name="ru.netology.nework.fragment.event.DetailedEventFragment"
         android:label="@string/event"
         tools:layout="@layout/fragment_detailed_event">
-        <action
-            android:id="@+id/action_detailedEventFragment_to_eventsFragment"
-            app:destination="@id/eventsFragment" />
+        <argument
+            android:name="eventId"
+            android:defaultValue="0L"
+            app:argType="long" />
+        <argument
+            android:name="eventContent"
+            app:argType="string" />
         <action
             android:id="@+id/action_detailedEventFragment_to_detailedUsersListFragment"
             app:destination="@id/detailedUsersListFragment" />
         <action
             android:id="@+id/action_detailedEventFragment_to_detailedUserFragment"
             app:destination="@id/detailedUserFragment" />
+        <action
+            android:id="@+id/action_detailedEventFragment_to_newEventFragment"
+            app:destination="@id/newEventFragment" />
     </fragment>
 
     <fragment
@@ -92,9 +99,6 @@
         <argument
             android:name="postContent"
             app:argType="string" />
-        <action
-            android:id="@+id/action_detailedPostFragment_to_postsFragment"
-            app:destination="@id/postsFragment" />
         <action
             android:id="@+id/action_detailedPostFragment_to_newPostFragment"
             app:destination="@id/newPostFragment" />
@@ -168,9 +172,10 @@
         android:name="ru.netology.nework.fragment.event.NewEventFragment"
         android:label="@string/new_event"
         tools:layout="@layout/fragment_new_event">
-        <action
-            android:id="@+id/action_newEventFragment_to_eventsFragment"
-            app:destination="@id/eventsFragment" />
+        <argument
+            android:name="eventId"
+            android:defaultValue="0L"
+            app:argType="long" />
         <action
             android:id="@+id/action_newEventFragment_to_mapFragment"
             app:destination="@id/mapFragment" />
@@ -192,14 +197,8 @@
             android:defaultValue="0L"
             app:argType="long" />
         <action
-            android:id="@+id/action_newPostFragment_to_postsFragment"
-            app:destination="@id/postsFragment" />
-        <action
             android:id="@+id/action_newPostFragment_to_mapFragment"
             app:destination="@id/mapFragment" />
-        <action
-            android:id="@+id/action_newPostFragment_to_detailedPostFragment"
-            app:destination="@id/detailedPostFragment" />
         <action
             android:id="@+id/action_newPostFragment_to_detailedUsersListFragment"
             app:destination="@id/detailedUsersListFragment" />
@@ -220,14 +219,7 @@
         android:id="@+id/mapFragment"
         android:name="ru.netology.nework.fragment.map.MapFragment"
         android:label="@string/add_location"
-        tools:layout="@layout/fragment_map">
-        <action
-            android:id="@+id/action_mapFragment_to_newPostFragment"
-            app:destination="@id/newPostFragment" />
-        <action
-            android:id="@+id/action_mapFragment_to_newEventFragment"
-            app:destination="@id/newEventFragment" />
-    </fragment>
+        tools:layout="@layout/fragment_map" />
 
     <!-- Вложенные экраны детального просмотра пользователя -->
 

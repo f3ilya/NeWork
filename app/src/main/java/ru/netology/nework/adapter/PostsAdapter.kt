@@ -2,8 +2,6 @@ package ru.netology.nework.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.SeekBar
-import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.findViewTreeLifecycleOwner
@@ -15,19 +13,21 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import ru.netology.nework.R
 import ru.netology.nework.databinding.CardPostBinding
-import ru.netology.nework.dto.AttachmentType
 import ru.netology.nework.dto.Post
+import ru.netology.nework.extensions.bindAttachment
+import ru.netology.nework.extensions.formatToLocalDateTime
 import ru.netology.nework.extensions.load
+import ru.netology.nework.extensions.renderPlayback
+import ru.netology.nework.extensions.setupMediaListeners
+import ru.netology.nework.extensions.showOptionsMenu
 import ru.netology.nework.media.MediaPlaybackManager
 import ru.netology.nework.media.PlaybackState
+import ru.netology.nework.util.DateFormatPattern
 import ru.netology.nework.util.Payloads
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import ru.netology.nework.util.counter
 
-interface OnInteractionListener {
+interface OnPostInteractionListener {
     fun onLike(post: Post)
     fun onShare(post: Post)
     fun onAudio(post: Post)
@@ -40,11 +40,11 @@ interface OnInteractionListener {
 
 class PostsAdapter(
     private val playbackManager: MediaPlaybackManager,
-    private val onInteractionListener: OnInteractionListener
+    private val onPostInteractionListener: OnPostInteractionListener
 ) : PagingDataAdapter<Post, PostViewHolder>(PostDiffCallback()) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
         val binding = CardPostBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return PostViewHolder(binding, playbackManager, onInteractionListener)
+        return PostViewHolder(binding, playbackManager, onPostInteractionListener)
     }
 
     override fun onBindViewHolder(holder: PostViewHolder, position: Int) {
@@ -81,7 +81,7 @@ class PostsAdapter(
 class PostViewHolder(
     private val binding: CardPostBinding,
     private val playbackManager: MediaPlaybackManager,
-    private val onInteractionListener: OnInteractionListener
+    private val onPostInteractionListener: OnPostInteractionListener
 ) : RecyclerView.ViewHolder(binding.root) {
     private var currentPost: Post? = null
     private var playbackJob: Job? = null
@@ -89,96 +89,46 @@ class PostViewHolder(
 
     init {
         with(binding) {
-            share.setOnClickListener { currentPost?.let(onInteractionListener::onShare) }
-            postContentContainer.setOnClickListener { currentPost?.let(onInteractionListener::onPost) }
+            headerContainer.menu.setOnClickListener { view ->
+                val post = currentPost ?: return@setOnClickListener
+                view.showOptionsMenu(
+                    onEdit = { onPostInteractionListener.onEdit(post) },
+                    onRemove = { onPostInteractionListener.onRemove(post) }
+                )
+            }
+            attachmentContainer.setupMediaListeners(
+                onVideoClick = { currentPost?.let(onPostInteractionListener::onVideo) },
+                onAudioClick = { currentPost?.let(onPostInteractionListener::onAudio) },
+                onSeekStart = { isUserSeeking = true },
+                onSeekStop = { progress ->
+                    isUserSeeking = false
+                    currentPost?.let { post -> onPostInteractionListener.onSeek(post, progress) }
+                }
+            )
+            postContentContainer.setOnClickListener { currentPost?.let(onPostInteractionListener::onPost) }
+            share.setOnClickListener { currentPost?.let(onPostInteractionListener::onShare) }
             like.setOnClickListener {
                 currentPost?.let { post ->
-                    onInteractionListener.onLike(post)
+                    onPostInteractionListener.onLike(post)
                     like.isChecked = post.likedByMe
                 }
             }
-            menu.setOnClickListener {
-                val post = currentPost ?: return@setOnClickListener
-                PopupMenu(it.context, it).apply {
-                    inflate(R.menu.menu_options)
-                    setOnMenuItemClickListener { item ->
-                        when (item.itemId) {
-                            R.id.remove -> {
-                                onInteractionListener.onRemove(post)
-                                true
-                            }
-
-                            R.id.edit -> {
-                                onInteractionListener.onEdit(post)
-                                true
-                            }
-
-                            else -> false
-                        }
-                    }
-                }.show()
-            }
-
-            attachmentContainer.videoContainer.setOnClickListener {
-                currentPost?.let(onInteractionListener::onVideo)
-            }
-
-            attachmentContainer.audioPlayPause.setOnClickListener {
-                currentPost?.let(onInteractionListener::onAudio)
-            }
-
-            attachmentContainer.audioSeekBar.setOnSeekBarChangeListener(object :
-                SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(
-                    seekBar: SeekBar?,
-                    progress: Int,
-                    fromUser: Boolean
-                ) {
-                }
-
-                override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                    isUserSeeking = true
-                }
-
-                override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                    isUserSeeking = false
-                    val post = currentPost ?: return
-                    seekBar?.let { onInteractionListener.onSeek(post, it.progress.toLong()) }
-                }
-            })
         }
     }
 
     fun bind(post: Post) {
         currentPost = post
-        binding.apply {
-            if (!post.authorAvatar.isNullOrBlank()) {
-                avatar.load(post.authorAvatar, true)
-            } else {
-                avatar.setImageResource(R.drawable.ic_avatar_placeholder_48)
-            }
-            author.text = post.author
-            if (post.content.isBlank() || post.content.isEmpty()) {
-                content.isVisible = false
-            } else {
-                content.isVisible = true
-                content.text = post.content
-            }
-            published.text = Instant.parse(post.published)
-                .atZone(ZoneId.systemDefault())
-                .format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))
+        with(binding) {
+            headerContainer.avatar.load(post.authorAvatar, true)
+            headerContainer.author.text = post.author
+            headerContainer.publishedOrJob.text =
+                post.published.formatToLocalDateTime(DateFormatPattern.DATE_TIME)
+            headerContainer.menu.isVisible = post.ownedByMe
+            content.isVisible = post.content.isNotBlank()
+            content.text = post.content
             like.isChecked = post.likedByMe
-            like.text = post.likeOwnerIds.size.toString()
-            menu.isVisible = post.ownedByMe
-
-            val type = post.attachment?.type
-            attachmentContainer.imageAttachment.isVisible = type == AttachmentType.IMAGE
-            attachmentContainer.videoContainer.isVisible = type == AttachmentType.VIDEO
-            attachmentContainer.audioAttachment.isVisible = type == AttachmentType.AUDIO
-
-            if (type == AttachmentType.IMAGE) {
-                attachmentContainer.imageAttachment.load(post.attachment.url)
-            }
+            like.text = counter(post.likeOwnerIds.size.toLong())
+            attachmentContainer.bindAttachment(post.attachment)
         }
     }
 
@@ -209,33 +159,19 @@ class PostViewHolder(
         currentPost = post
         with(binding) {
             like.isChecked = post.likedByMe
-            like.text = post.likeOwnerIds.size.toString()
+            like.text = counter(post.likeOwnerIds.size.toLong())
         }
     }
 
     private fun renderPlaybackState(state: PlaybackState) {
         val post = currentPost ?: return
-        val isActive = (state.currentPostId == post.id)
-
-        with(binding.attachmentContainer) {
-            when (post.attachment?.type) {
-                AttachmentType.AUDIO -> {
-                    audioPlayPause.isChecked = isActive && state.isPlaying
-                    audioSeekBar.max = if (isActive) state.duration.toInt() else 0
-                    if (!isUserSeeking) {
-                        audioSeekBar.progress = if (isActive) state.progress.toInt() else 0
-                    }
-                }
-
-                AttachmentType.VIDEO -> {
-                    videoPlaceholder.isVisible = !isActive
-                    videoAttachment.isVisible = isActive
-                    videoAttachment.player = if (isActive) playbackManager.exoPlayer else null
-                }
-
-                else -> Unit
-            }
-        }
+        binding.attachmentContainer.renderPlayback(
+            type = post.attachment?.type,
+            isActive = state.currentId == post.id,
+            state = state,
+            exoPlayer = playbackManager.exoPlayer,
+            isUserSeeking = isUserSeeking
+        )
     }
 }
 

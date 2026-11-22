@@ -9,10 +9,10 @@ import ru.netology.nework.entity.user.UserEntity
 @Dao
 interface UserDao {
     @Upsert
-    suspend fun insert(userEntity: UserEntity)
+    suspend fun upsert(userEntity: UserEntity)
 
     @Upsert
-    suspend fun insert(userEntity: List<UserEntity>)
+    suspend fun upsert(userEntity: List<UserEntity>)
 
     @Query("SELECT * FROM UserEntity ORDER BY id DESC")
     fun getUsersAll(): Flow<List<UserEntity>>

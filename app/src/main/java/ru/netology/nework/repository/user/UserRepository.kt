@@ -15,7 +15,7 @@ interface UserRepository {
     suspend fun likePost(authorId: Long, postId: Long, likedByMe: Boolean, isMyProfile: Boolean)
     suspend fun checkAndRefreshUsers(ids: List<Long>)
     suspend fun checkAndRefreshUser(id: Long)
-    suspend fun refreshJobs(ownerId: Long)
+    suspend fun refreshJobs(ownerId: Long, isMyProfile: Boolean)
     suspend fun saveJob(job: Job)
     suspend fun removeJob(jobId: Long)
 }

@@ -55,7 +55,7 @@ class JobsViewModel @Inject constructor(
         }
         viewModelScope.launch {
             runCatching {
-                repository.refreshJobs(userId)
+                repository.refreshJobs(userId, isMyProfile)
             }.onSuccess {
                 resetState()
             }.onFailure { exception ->

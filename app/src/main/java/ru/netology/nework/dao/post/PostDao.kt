@@ -19,10 +19,10 @@ interface PostDao {
     fun pagingSourceByAuthorId(authorId: Long): PagingSource<Int, PostEntity>
 
     @Upsert
-    suspend fun insert(postEntity: PostEntity)
+    suspend fun upsert(postEntity: PostEntity)
 
     @Upsert
-    suspend fun insert(postsEntity: List<PostEntity>)
+    suspend fun upsert(postsEntity: List<PostEntity>)
 
     @Query("DELETE FROM PostEntity WHERE id = :id")
     suspend fun removePost(id: Long)

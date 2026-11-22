@@ -1,6 +1,133 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="?attr/colorSurface"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/common_spacing"
+    android:layout_marginEnd="@dimen/common_spacing"
+    android:layout_marginBottom="@dimen/common_spacing"
+    app:cardCornerRadius="@dimen/card_corner_radius">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/eventContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <include
+                android:id="@+id/headerContainer"
+                layout="@layout/layout_header_card_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <include
+                android:id="@+id/attachmentContainer"
+                layout="@layout/layout_attachment_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/common_spacing" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/common_spacing"
+                android:paddingEnd="@dimen/common_spacing">
+
+                <TextView
+                    android:id="@+id/type"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:text="Offline" />
+
+                <TextView
+                    android:id="@+id/datetime"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/common_spacing"
+                    android:textAppearance="?attr/textAppearanceLabelMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/type"
+                    tools:text="@sample/posts.json/data/published" />
+
+                <TextView
+                    android:id="@+id/content"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/common_spacing"
+                    android:autoLink="web"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:lineSpacingMultiplier="1.5"
+                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toTopOf="@id/speakersContainer"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/datetime"
+                    tools:text="@sample/posts.json/data/content"
+                    tools:visibility="gone" />
+
+                <include
+                    android:id="@+id/speakersContainer"
+                    layout="@layout/layout_user_section_container"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/common_spacing"
+                    app:layout_constraintBottom_toTopOf="@id/likersContainer"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/content"
+                    tools:visibility="gone" />
+
+
+                <include
+                    android:id="@+id/likersContainer"
+                    layout="@layout/layout_user_section_container"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintBottom_toTopOf="@id/participantsContainer"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/speakersContainer"
+                    app:layout_goneMarginTop="@dimen/common_spacing"
+                    tools:visibility="gone" />
+
+                <include
+                    android:id="@+id/participantsContainer"
+                    layout="@layout/layout_user_section_container"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/likersContainer"
+                    tools:visibility="gone" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <com.yandex.mapkit.mapview.MapView
+                android:id="@+id/map"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/attachment_height"
+                android:clickable="false"
+                android:focusable="false"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</com.google.android.material.card.MaterialCardView>

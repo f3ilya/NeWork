@@ -20,12 +20,11 @@ import kotlinx.coroutines.launch
 import ru.netology.nework.R
 import ru.netology.nework.databinding.FragmentNewJobBinding
 import ru.netology.nework.dto.Job
+import ru.netology.nework.extensions.formatToLocalDateTime
+import ru.netology.nework.util.DateFormatPattern
 import ru.netology.nework.util.OnSaveActionListener
 import ru.netology.nework.viewmodel.user.NewJobViewModel
 import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @AndroidEntryPoint
 class NewJobFragment : Fragment(R.layout.fragment_new_job), OnSaveActionListener {
@@ -96,16 +95,8 @@ class NewJobFragment : Fragment(R.layout.fragment_new_job), OnSaveActionListener
 
     private fun bindDate(job: Job) {
         with(binding) {
-            val start = job.start.takeIf { it.isNotEmpty() }?.let {
-                Instant.parse(it)
-                    .atZone(ZoneId.systemDefault())
-                    .format(DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.getDefault()))
-            }
-            val finish = job.finish.takeIf { !it.isNullOrBlank() }?.let {
-                Instant.parse(it)
-                    .atZone(ZoneId.systemDefault())
-                    .format(DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.getDefault()))
-            }
+            val start = job.start.formatToLocalDateTime(DateFormatPattern.SHORT_DATE)
+            val finish = job.finish.formatToLocalDateTime(DateFormatPattern.SHORT_DATE)
             chipStart.text = start ?: getString(R.string.start_date_job)
             chipStart.isCloseIconVisible = !start.isNullOrBlank()
             chipFinish.text = when {

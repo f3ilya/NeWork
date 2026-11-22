@@ -11,10 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 import ru.netology.nework.R
 import ru.netology.nework.databinding.CardJobBinding
 import ru.netology.nework.dto.Job
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import ru.netology.nework.extensions.formatToLocalDateTime
+import ru.netology.nework.util.DateFormatPattern
 
 class JobsAdapter(
     private val isMyProfile: Boolean,
@@ -40,18 +38,13 @@ class JobsAdapter(
         fun bind(job: Job) {
             with(binding) {
                 name.text = job.name
-                val start = Instant.parse(job.start)
-                    .atZone(ZoneId.systemDefault())
-                    .format(DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault()))
-                val dateText = if (job.finish == null) {
+                val start = job.start.formatToLocalDateTime(DateFormatPattern.FULL_MONTH_DATE)
+                val finish = job.finish.formatToLocalDateTime(DateFormatPattern.FULL_MONTH_DATE)
+                date.text = if (finish == null) {
                     context.getString(R.string.date_to_present, start)
                 } else {
-                    val finish = Instant.parse(job.finish)
-                        .atZone(ZoneId.systemDefault())
-                        .format(DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault()))
                     context.getString(R.string.date_range, start, finish)
                 }
-                date.text = dateText
                 position.text = job.position
                 if (!job.link.isNullOrEmpty()) {
                     link.isVisible = true

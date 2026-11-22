@@ -18,7 +18,7 @@ data class Post(
     val content: String,
     @SerializedName("published")
     val published: String,
-    @SerializedName("coords")
+    @Suppress("SpellCheckingInspection") @SerializedName("coords")
     val coordinates: Coordinates? = null,
     @SerializedName("link")
     val link: String? = null,

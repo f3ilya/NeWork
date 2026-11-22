@@ -12,10 +12,10 @@ interface JobDao {
     fun getJobsByOwnerId(ownerId: Long): Flow<List<JobEntity>>
 
     @Upsert
-    suspend fun insert(jobs: List<JobEntity>)
+    suspend fun upsert(jobs: List<JobEntity>)
 
     @Upsert
-    suspend fun insert(job: JobEntity)
+    suspend fun upsert(job: JobEntity)
 
     @Query("DELETE FROM JobEntity WHERE ownerId = :ownerId")
     suspend fun removeJobsByOwnerId(ownerId: Long)

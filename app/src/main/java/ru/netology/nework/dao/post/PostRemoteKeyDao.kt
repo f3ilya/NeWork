@@ -11,10 +11,10 @@ interface PostRemoteKeyDao {
     suspend fun getBeforeKey(): Long?
 
     @Upsert
-    suspend fun insert(key: PostRemoteKeyEntity)
+    suspend fun upsert(key: PostRemoteKeyEntity)
 
     @Upsert
-    suspend fun insert(keys: List<PostRemoteKeyEntity>)
+    suspend fun upsert(keys: List<PostRemoteKeyEntity>)
 
     @Query("DELETE FROM PostRemoteKeyEntity")
     suspend fun removeAll()

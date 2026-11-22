@@ -36,7 +36,7 @@ fun Fragment.registerLocationPermissionLauncher(
             onGranted()
         } else {
             if (!shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                showSettingsSnackbar()
+                showSettingsSnackBar()
             } else {
                 Snackbar.make(
                     requireView(),
@@ -48,7 +48,7 @@ fun Fragment.registerLocationPermissionLauncher(
     }
 }
 
-fun Fragment.showSettingsSnackbar() {
+fun Fragment.showSettingsSnackBar() {
     Snackbar.make(
         requireView(),
         getString(R.string.geolocation_is_disabled),
@@ -144,7 +144,7 @@ fun Fragment.authorizationIsRequired(
     onNavigate: () -> Unit,
 ) {
     requireContext().showConfirmationDialog(
-        title = getString(R.string.authorization_is_required_for_this_action),
+        title = getString(R.string.error_auth_required),
         message = getString(R.string.authorization_is_required_message),
         onConfirm = onNavigate,
         positive = getString(R.string.log_in)

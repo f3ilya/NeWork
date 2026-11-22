@@ -68,7 +68,7 @@ class WallRemoteMediator @AssistedInject constructor(
                     LoadType.REFRESH -> {
                         wallRemoteKeyDao.removeByAuthorId(authorId)
                         postDao.removeByAuthorId(authorId)
-                        wallRemoteKeyDao.insert(
+                        wallRemoteKeyDao.upsert(
                             listOf(
                                 WallRemoteKeyEntity(
                                     type = WallRemoteKeyEntity.KeyType.AFTER,
@@ -87,7 +87,7 @@ class WallRemoteMediator @AssistedInject constructor(
                     LoadType.PREPEND -> {}
 
                     LoadType.APPEND -> {
-                        wallRemoteKeyDao.insert(
+                        wallRemoteKeyDao.upsert(
                             WallRemoteKeyEntity(
                                 type = WallRemoteKeyEntity.KeyType.BEFORE,
                                 authorId = authorId,
@@ -96,7 +96,7 @@ class WallRemoteMediator @AssistedInject constructor(
                         )
                     }
                 }
-                postDao.insert(body.toEntity())
+                postDao.upsert(body.toEntity())
             }
             return MediatorResult.Success(endOfPaginationReached = false)
         } catch (exception: Exception) {

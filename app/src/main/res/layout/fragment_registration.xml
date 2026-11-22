@@ -2,9 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    style="?attr/colorSurface"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
     android:orientation="vertical"
     android:padding="@dimen/common_spacing"
     tools:context=".fragment.auth.RegistrationFragment">
@@ -126,8 +126,8 @@
         style="@style/Widget.MaterialComponents.Button.TextButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:focusable="false"
         android:layout_marginTop="@dimen/common_spacing"
+        android:focusable="false"
         android:text="@string/already_have_an_account_sign_in"
         android:textColor="?attr/colorPrimary" />
 

@@ -2,8 +2,6 @@ package ru.netology.nework.fragment.post
 
 import android.os.Bundle
 import android.view.View
-import android.widget.SeekBar
-import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -18,20 +16,21 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import ru.netology.nework.R
 import ru.netology.nework.databinding.FragmentDetailedPostBinding
-import ru.netology.nework.dto.AttachmentType
 import ru.netology.nework.dto.Coordinates
 import ru.netology.nework.dto.Post
+import ru.netology.nework.extensions.bindAttachment
+import ru.netology.nework.extensions.bindUserSection
+import ru.netology.nework.extensions.formatToLocalDateTime
 import ru.netology.nework.extensions.load
-import ru.netology.nework.extensions.renderAvatarStack
+import ru.netology.nework.extensions.renderPlayback
+import ru.netology.nework.extensions.setupMediaListeners
+import ru.netology.nework.extensions.showOptionsMenu
 import ru.netology.nework.map.YandexMapManager
 import ru.netology.nework.media.MediaPlaybackManager
 import ru.netology.nework.media.PlaybackState
-import ru.netology.nework.model.AvatarModel
+import ru.netology.nework.util.DateFormatPattern
 import ru.netology.nework.util.FragmentMode
 import ru.netology.nework.viewmodel.post.DetailedPostViewModel
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -45,8 +44,6 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
 
     @Inject
     lateinit var yandexMapManager: YandexMapManager
-
-    private var currentPostId: Long = 0L
     private var isUserSeeking = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -55,7 +52,6 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
         postponeEnterTransition(100, TimeUnit.MILLISECONDS)
         setupYandexMap()
         setupExoPlayer()
-        setupListeners()
         setupObservers()
     }
 
@@ -66,30 +62,6 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
 
     private fun setupExoPlayer() {
         viewLifecycleOwner.lifecycle.addObserver(playbackManager)
-    }
-
-    private fun setupListeners() {
-        with(binding) {
-            attachmentContainer.audioSeekBar.setOnSeekBarChangeListener(object :
-                SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {}
-
-
-                override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                    isUserSeeking = true
-                }
-
-                override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                    isUserSeeking = false
-                    seekBar?.let {
-                        playbackManager.seekTo(
-                            postId = currentPostId,
-                            position = it.progress.toLong()
-                        )
-                    }
-                }
-            })
-        }
     }
 
     private fun setupObservers() {
@@ -104,7 +76,6 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
                 launch {
                     viewModel.detailedPost.collectLatest { post ->
                         post?.let {
-                            currentPostId = post.id
                             bindPost(post)
                             bindMap(post.coordinates)
                         }
@@ -119,7 +90,6 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
 
                 launch {
                     viewModel.state.collectLatest { state ->
-                        binding.postContentContainer.isVisible = !state.loading
                         state.errorType?.let { errorType ->
                             Snackbar.make(
                                 binding.root,
@@ -150,144 +120,72 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
 
     private fun bindPost(post: Post) {
         with(binding) {
-            if (!post.authorAvatar.isNullOrBlank()) {
-                authorAvatar.load(post.authorAvatar, true)
-            } else {
-                authorAvatar.setImageResource(R.drawable.ic_avatar_placeholder_48)
-            }
-            authorName.text = post.author
-            authorJob.text = if (post.authorJob.isNullOrBlank()) {
+            headerContainer.avatar.load(post.authorAvatar, true)
+            headerContainer.author.text = post.author
+            headerContainer.publishedOrJob.text = if (post.authorJob.isNullOrBlank()) {
                 getString(R.string.looking_for_a_job)
             } else post.authorJob
-            content.isVisible = if (post.content.isNotBlank() || post.content.isNotEmpty()) {
-                content.text = post.content
-                true
-            } else false
-            published.text = Instant.parse(post.published)
-                .atZone(ZoneId.systemDefault())
-                .format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))
-            like.isChecked = post.likedByMe
-            like.text = post.likeOwnerIds.size.toString()
-
-            val type = post.attachment?.type
-            attachmentContainer.imageAttachment.isVisible = type == AttachmentType.IMAGE
-            attachmentContainer.videoContainer.isVisible = type == AttachmentType.VIDEO
-            attachmentContainer.audioAttachment.isVisible = type == AttachmentType.AUDIO
-            when (post.attachment?.type) {
-                AttachmentType.IMAGE -> {
-                    attachmentContainer.imageAttachment.load(post.attachment.url)
-                }
-
-                AttachmentType.VIDEO -> {
-                    attachmentContainer.videoContainer.setOnClickListener {
-                        playbackManager.togglePlay(
-                            postId = post.id,
-                            url = post.attachment.url,
-                            isVideo = true
-                        )
-                    }
-                }
-
-                AttachmentType.AUDIO -> {
-                    attachmentContainer.audioPlayPause.setOnClickListener {
-                        playbackManager.togglePlay(
-                            postId = post.id,
-                            url = post.attachment.url,
-                            isVideo = false
-                        )
-                    }
-                }
-
-                null -> Unit
-            }
-
-            like.setOnClickListener {
-                viewModel.likePost(id = post.id, likeByMe = post.likedByMe)
-                like.isChecked = post.likedByMe
-            }
-
-            val likeModels = post.likeOwnerIds.map { userId ->
-                AvatarModel(
-                    userId = userId,
-                    avatarUrl = post.users[userId.toString()]?.avatar
-                )
-            }
-
-            avatarLikersStack.renderAvatarStack(
-                models = likeModels,
-                moreButton = moreLikes,
-                onAvatarClickListener = { userId ->
-                    val action =
-                        DetailedPostFragmentDirections.actionDetailedPostFragmentToDetailedUserFragment(
-                            userId
-                        )
-                    findNavController().navigate(action)
+            content.isVisible = post.content.isNotBlank()
+            content.text = post.content
+            published.text = post.published.formatToLocalDateTime(DateFormatPattern.DATE_TIME)
+            attachmentContainer.bindAttachment(post.attachment)
+            attachmentContainer.setupMediaListeners(
+                onVideoClick = {
+                    playbackManager.togglePlay(
+                        id = post.id,
+                        url = post.attachment?.url ?: return@setupMediaListeners,
+                        isVideo = true
+                    )
                 },
-                onMoreClickListener = {
-                    val action =
-                        DetailedPostFragmentDirections.actionDetailedPostFragmentToDetailedUsersListFragment(
-                            fragmentMode = FragmentMode.LIKERS,
-                            userIds = post.likeOwnerIds.toLongArray()
-                        )
-                    findNavController().navigate(action)
+                onAudioClick = {
+                    playbackManager.togglePlay(
+                        id = post.id,
+                        url = post.attachment?.url ?: return@setupMediaListeners,
+                        isVideo = false
+                    )
+                },
+                onSeekStart = { isUserSeeking = true },
+                onSeekStop = { progress ->
+                    isUserSeeking = false
+                    playbackManager.seekTo(id = post.id, position = progress)
                 }
             )
 
-            if (post.mentionIds.isNotEmpty()) {
-                mentionedContainer.root.isVisible = true
-                mentionedContainer.mentionedIcon.text = post.mentionIds.size.toString()
-                val mentionModels = post.mentionIds.map { userId ->
-                    AvatarModel(
-                        userId = userId,
-                        avatarUrl = post.users[userId.toString()]?.avatar
-                    )
-                }
-                mentionedContainer.avatarMentionedStack.renderAvatarStack(
-                    models = mentionModels,
-                    moreButton = mentionedContainer.moreMentioned,
-                    onAvatarClickListener = { userId ->
-                        val action =
-                            DetailedPostFragmentDirections.actionDetailedPostFragmentToDetailedUserFragment(
-                                userId
-                            )
+            likersContainer.actionButton.setOnClickListener {
+                viewModel.likePost(id = post.id, likeByMe = post.likedByMe)
+                likersContainer.actionButton.isChecked = post.likedByMe
+            }
+
+            likersContainer.bindUserSection(
+                mode = FragmentMode.LIKERS,
+                userIds = post.likeOwnerIds,
+                usersMap = post.users,
+                isChecked = post.likedByMe,
+                onAvatarClick = ::openUserProfile,
+                onMoreClick = ::openUsersList
+            )
+
+            mentionedContainer.bindUserSection(
+                mode = FragmentMode.MENTIONED,
+                userIds = post.mentionIds,
+                usersMap = post.users,
+                onAvatarClick = ::openUserProfile,
+                onMoreClick = ::openUsersList
+            )
+
+            headerContainer.menu.isVisible = post.ownedByMe
+            headerContainer.menu.setOnClickListener { view ->
+                view.showOptionsMenu(
+                    onEdit = {
+                        val action = DetailedPostFragmentDirections
+                            .actionDetailedPostFragmentToNewPostFragment(post.id)
                         findNavController().navigate(action)
                     },
-                    onMoreClickListener = {
-                        val action =
-                            DetailedPostFragmentDirections.actionDetailedPostFragmentToDetailedUsersListFragment(
-                                fragmentMode = FragmentMode.MENTIONED,
-                                userIds = post.mentionIds.toLongArray()
-                            )
-                        findNavController().navigate(action)
+                    onRemove = {
+                        viewModel.removePost(post.id)
+                        findNavController().navigateUp()
                     }
                 )
-            } else mentionedContainer.root.isVisible = false
-
-            menu.isVisible = post.ownedByMe
-            menu.setOnClickListener {
-                PopupMenu(it.context, it).apply {
-                    inflate(R.menu.menu_options)
-                    setOnMenuItemClickListener { item ->
-                        when (item.itemId) {
-                            R.id.remove -> {
-                                viewModel.removePost(post.id)
-                                findNavController().navigateUp()
-                                true
-                            }
-
-                            R.id.edit -> {
-                                val action =
-                                    DetailedPostFragmentDirections.actionDetailedPostFragmentToNewPostFragment(
-                                        post.id
-                                    )
-                                findNavController().navigate(action)
-                                true
-                            }
-
-                            else -> false
-                        }
-                    }
-                }.show()
             }
             startPostponedEnterTransition()
         }
@@ -295,25 +193,24 @@ class DetailedPostFragment : Fragment(R.layout.fragment_detailed_post) {
 
     private fun renderPlaybackState(state: PlaybackState) {
         val attachmentType = viewModel.detailedPost.value?.attachment?.type ?: return
-        val isActive = (state.currentPostId == currentPostId)
-        with(binding.attachmentContainer) {
-            when (attachmentType) {
-                AttachmentType.VIDEO -> {
-                    videoPlaceholder.isVisible = !isActive
-                    videoAttachment.isVisible = isActive
-                    videoAttachment.player = if (isActive) playbackManager.exoPlayer else null
-                }
+        binding.attachmentContainer.renderPlayback(
+            type = attachmentType,
+            isActive = state.currentId != null,
+            state = state,
+            exoPlayer = playbackManager.exoPlayer,
+            isUserSeeking = isUserSeeking
+        )
+    }
 
-                AttachmentType.AUDIO -> {
-                    audioPlayPause.isChecked = isActive && state.isPlaying
-                    audioSeekBar.max = if (isActive) state.duration.toInt() else 0
-                    if (!isUserSeeking) {
-                        audioSeekBar.progress = if (isActive) state.progress.toInt() else 0
-                    }
-                }
+    private fun openUserProfile(userId: Long) {
+        val action = DetailedPostFragmentDirections
+            .actionDetailedPostFragmentToDetailedUserFragment(userId)
+        findNavController().navigate(action)
+    }
 
-                else -> Unit
-            }
-        }
+    private fun openUsersList(mode: FragmentMode, userIds: LongArray) {
+        val action = DetailedPostFragmentDirections
+            .actionDetailedPostFragmentToDetailedUsersListFragment(mode, userIds)
+        findNavController().navigate(action)
     }
 }

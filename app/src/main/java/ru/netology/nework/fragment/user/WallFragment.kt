@@ -17,7 +17,7 @@ import dev.androidbroadcast.vbpd.viewBinding
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import ru.netology.nework.R
-import ru.netology.nework.adapter.OnInteractionListener
+import ru.netology.nework.adapter.OnPostInteractionListener
 import ru.netology.nework.adapter.PagingLoadStateAdapter
 import ru.netology.nework.adapter.PostsAdapter
 import ru.netology.nework.databinding.FragmentPostsBinding
@@ -83,7 +83,7 @@ class WallFragment : Fragment(R.layout.fragment_posts) {
     }
 
     private fun setupAdapter() {
-        adapter = PostsAdapter(playbackManager, object : OnInteractionListener {
+        adapter = PostsAdapter(playbackManager, object : OnPostInteractionListener {
             override fun onLike(post: Post) {
                 viewModel.likePost(post.id, post.likedByMe)
             }
@@ -94,16 +94,16 @@ class WallFragment : Fragment(R.layout.fragment_posts) {
 
             override fun onAudio(post: Post) {
                 val url = post.attachment?.url ?: return
-                playbackManager.togglePlay(postId = post.id, url = url, isVideo = false)
+                playbackManager.togglePlay(id = post.id, url = url, isVideo = false)
             }
 
             override fun onVideo(post: Post) {
                 val url = post.attachment?.url ?: return
-                playbackManager.togglePlay(postId = post.id, url = url, isVideo = true)
+                playbackManager.togglePlay(id = post.id, url = url, isVideo = true)
             }
 
             override fun onSeek(post: Post, progress: Long) {
-                playbackManager.seekTo(postId = post.id, position = progress)
+                playbackManager.seekTo(id = post.id, position = progress)
             }
 
             override fun onPost(post: Post) {}

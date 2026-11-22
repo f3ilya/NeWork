@@ -5,7 +5,7 @@
     <string name="error_network">Отсутствует интернет-соединение. Проверьте сеть.</string>
     <string name="error_db">Ошибка базы данных. Попробуйте позже.</string>
     <string name="error_unknown">Что-то пошло не так. Попробуйте позже.</string>
-    <string name="incorrect_login_or_password">Неверный логин или пароль.</string>
+    <string name="error_incorrect_login_or_password">Неверный логин или пароль.</string>
     <string name="description_post_author_avatar">Аватар автора поста</string>
     <string name="description_post_menu">Меню поста</string>
     <string name="description_post_likes">Лайки поста</string>
@@ -16,9 +16,8 @@
     <string name="login">Логин</string>
     <string name="password">Пароль</string>
     <string name="log_in">Войти</string>
-    <string name="log_in_to_your_account">Вход в аккаунт</string>
     <string name="don_t_have_an_account_yet_register">Еще нет аккаунта? Зарегистрироваться</string>
-    <string name="the_user_is_not_registered">Пользователь не зарегистрирован.</string>
+    <string name="error_user_not_registered">Пользователь не зарегистрирован.</string>
     <string name="password_cannot_be_empty">Пароль не может быть пустым</string>
     <string name="login_cannot_be_empty">Логин не может быть пустым</string>
     <string name="sign_up">Зарегистрироваться</string>
@@ -35,8 +34,8 @@
     <string name="description_select_photo">Выбрать фото</string>
     <string name="description_take_photo">Сделать фото</string>
     <string name="remove">Удалить</string>
-    <string name="the_user_is_already_registered">Пользователь уже зарегистрирован.</string>
-    <string name="invalid_photo_format">Неправильный формат фото.</string>
+    <string name="error_user_already_registered">Пользователь уже зарегистрирован.</string>
+    <string name="error_invalid_photo_format">Неправильный формат фото.</string>
     <string name="description_avatar">Аватар</string>
     <string name="share">Поделиться</string>
     <string name="save">Сохранить</string>
@@ -51,8 +50,8 @@
     <string name="description_add_post">Добавить пост</string>
     <string name="chooser_share_post">Поделиться</string>
     <string name="description_video_placeholder">Заставка видео</string>
-    <string name="authorization_is_required_for_this_action">Для этого действия требуется авторизация.</string>
-    <string name="post_not_found">Пост не найден.</string>
+    <string name="error_auth_required">Для этого действия требуется авторизация.</string>
+    <string name="error_post_not_found">Пост не найден.</string>
     <string name="likers">Оценили</string>
     <string name="mentioned">Упомянутые</string>
     <string name="geolocation_is_disabled">Геолокация отключена. Включите её в настройках приложения.</string>
@@ -66,7 +65,7 @@
     <string name="remove_attachment">Удалить вложение</string>
     <string name="menu_edit">Редактировать</string>
     <string name="menu_remove">Удалить</string>
-    <string name="invalid_attachment_format">Неправильный формат вложения.</string>
+    <string name="error_invalid_attachment_format">Неправильный формат вложения.</string>
     <string name="select_a_picture">Выберите изображение</string>
     <string name="authorization_is_required_message">Для выполнения этого действия необходимо войти в аккаунт. Перейти на экран входа?</string>
     <string name="select_a_media">Выберите медиафайл</string>
@@ -83,7 +82,7 @@
     <string name="speakers">Спикеры</string>
     <string name="participants">Участники</string>
     <string name="select_users">Выбрать пользователей</string>
-    <string name="user_not_found">Пользователь не найден.</string>
+    <string name="error_user_not_found">Пользователь не найден.</string>
     <string name="user_profile">Профиль пользователя</string>
     <string name="date_to_present">%1$s – НВ</string>
     <string name="date_range">%1$s – %2$s</string>
@@ -91,12 +90,11 @@
     <string name="name_job">Название компании</string>
     <string name="position_job">Должность</string>
     <string name="link_job">Ссылка</string>
-    <string name="select_a_date">Выберите дату</string>
+    <string name="select_date">Выберите дату</string>
     <string name="name_cannot_be_empty_job">Название не должно быть пустым</string>
     <string name="position_cannot_be_empty_job">Должность не должна быть пустой</string>
     <string name="invalid_link_format_job">Неверный формат ссылки</string>
     <string name="start_date_cannot_be_empty">Дата начала не может быть пустой</string>
-    <string name="create">Создать</string>
     <string name="end_date_job">Дата окончания</string>
     <string name="start_date_job">Дата начала</string>
     <string name="present">НВ</string>
@@ -110,4 +108,17 @@
     <string name="empty_profile_posts_guest">У пользователя пока нет постов.</string>
     <string name="empty_profile_jobs_owner">Добавьте ваше место работы.</string>
     <string name="empty_profile_jobs_guest">Опыт работы не указан.</string>
+    <string name="error_event_not_found">Событие не найдено.</string>
+    <string name="event_date_hint">Дата</string>
+    <string name="event_date_helper_text">ММ/ДД/ГГГГ ЧЧ:ММ</string>
+    <string name="event_type_title">Тип</string>
+    <string name="online">Онлайн</string>
+    <string name="offline">Оффлайн</string>
+    <string name="event_hint">Введите текст события…</string>
+    <string name="description_add_event">Добавить событие</string>
+    <string name="error_empty_event_date">Укажите дату и время проведения события.</string>
+    <string name="error_past_event_date">Дата и время события не могут быть в прошлом.</string>
+    <string name="error_empty_content_or_attachment">Введите текст или добавьте вложение.</string>
+    <string name="select_time">Выберите время</string>
+    <string name="description_dash">Тире</string>
 </resources>

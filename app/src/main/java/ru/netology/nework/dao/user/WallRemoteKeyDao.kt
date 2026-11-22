@@ -11,10 +11,10 @@ interface WallRemoteKeyDao {
     suspend fun getBeforeKeyByAuthorId(authorId: Long): Long?
 
     @Upsert
-    suspend fun insert(remoteKeyEntity: List<WallRemoteKeyEntity>)
+    suspend fun upsert(remoteKeyEntity: List<WallRemoteKeyEntity>)
 
     @Upsert
-    suspend fun insert(remoteKeyEntity: WallRemoteKeyEntity)
+    suspend fun upsert(remoteKeyEntity: WallRemoteKeyEntity)
 
     @Query("DELETE FROM WallRemoteKeyEntity WHERE authorId = :authorId")
     suspend fun removeByAuthorId(authorId: Long)

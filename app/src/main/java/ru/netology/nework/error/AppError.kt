@@ -18,6 +18,8 @@ sealed class AppError : RuntimeException() {
     class FileAccessError : AppError()
     class FileTooLargeError : AppError()
     class PlaybackError : AppError()
+    class EmptyContentOrAttachmentError : AppError()
+    class EmptyEventDateError : AppError()
     class UnknownError : AppError()
 
     companion object {
@@ -60,6 +62,8 @@ fun Throwable.toErrorType(
         is AppError.FileAccessError -> ErrorType.FILE_ACCESS
         is AppError.FileTooLargeError -> ErrorType.FILE_TOO_LARGE
         is AppError.PlaybackError -> ErrorType.PLAYBACK
+        is AppError.EmptyContentOrAttachmentError -> ErrorType.EMPTY_CONTENT_OR_ATTACHMENT
+        is AppError.EmptyEventDateError -> ErrorType.EMPTY_EVENT_DATE
         is AppError.UnknownError -> ErrorType.UNKNOWN
     }
 }
@@ -71,12 +75,15 @@ enum class ErrorType(@param:StringRes val messageRes: Int) {
     FILE_ACCESS(R.string.error_file_access),
     FILE_TOO_LARGE(R.string.error_file_too_large),
     UNKNOWN(R.string.error_unknown),
-    POST_NOT_FOUND(R.string.post_not_found),
-    USER_NOT_FOUND(R.string.user_not_found),
-    USER_NOT_REGISTRATION(R.string.the_user_is_not_registered),
-    USER_ALREADY_REGISTERED(R.string.the_user_is_already_registered),
-    AUTH_REQUIRED(R.string.authorization_is_required_for_this_action),
-    INVALID_PASSWORD(R.string.incorrect_login_or_password),
-    INVALID_PHOTO(R.string.invalid_photo_format),
-    INVALID_FILE(R.string.invalid_attachment_format)
+    POST_NOT_FOUND(R.string.error_post_not_found),
+    EVENT_NOT_FOUND(R.string.error_event_not_found),
+    USER_NOT_FOUND(R.string.error_user_not_found),
+    USER_NOT_REGISTRATION(R.string.error_user_not_registered),
+    USER_ALREADY_REGISTERED(R.string.error_user_already_registered),
+    AUTH_REQUIRED(R.string.error_auth_required),
+    INVALID_PASSWORD(R.string.error_incorrect_login_or_password),
+    INVALID_PHOTO(R.string.error_invalid_photo_format),
+    INVALID_FILE(R.string.error_invalid_attachment_format),
+    EMPTY_CONTENT_OR_ATTACHMENT(R.string.error_empty_content_or_attachment),
+    EMPTY_EVENT_DATE(R.string.error_empty_event_date),
 }

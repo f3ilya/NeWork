@@ -28,45 +28,42 @@ data class PostEntity(
     @Embedded(prefix = "attach_")
     val attachment: Attachment?,
     val users: Map<String, UserPreview>
-) {
-    fun toDto() = Post(
-        id = id,
-        authorId = authorId,
-        author = author,
-        authorJob = authorJob.orEmpty(),
-        authorAvatar = authorAvatar.orEmpty(),
-        content = content,
-        published = published,
-        coordinates = coordinates,
-        link = link.orEmpty(),
-        mentionIds = mentionIds,
-        mentionedMe = mentionedMe,
-        likeOwnerIds = likeOwnerIds,
-        likedByMe = likedByMe,
-        attachment = attachment,
-        users = users
-    )
+)
 
-    companion object {
-        fun fromDto(dto: Post) = PostEntity(
-            id = dto.id,
-            authorId = dto.authorId,
-            author = dto.author,
-            authorJob = dto.authorJob,
-            authorAvatar = dto.authorAvatar,
-            content = dto.content,
-            published = dto.published,
-            coordinates = dto.coordinates,
-            link = dto.link,
-            mentionIds = dto.mentionIds,
-            mentionedMe = dto.mentionedMe,
-            likeOwnerIds = dto.likeOwnerIds,
-            likedByMe = dto.likedByMe,
-            attachment = dto.attachment,
-            users = dto.users
-        )
-    }
-}
+fun PostEntity.toDto() = Post(
+    id = id,
+    authorId = authorId,
+    author = author,
+    authorJob = authorJob,
+    authorAvatar = authorAvatar,
+    content = content,
+    published = published,
+    coordinates = coordinates,
+    link = link,
+    mentionIds = mentionIds,
+    mentionedMe = mentionedMe,
+    likeOwnerIds = likeOwnerIds,
+    likedByMe = likedByMe,
+    attachment = attachment,
+    users = users
+)
 
-fun List<PostEntity>.toDto(): List<Post> = map(PostEntity::toDto)
-fun List<Post>.toEntity(): List<PostEntity> = map(PostEntity::fromDto)
+fun Post.toEntity() = PostEntity(
+    id = id,
+    authorId = authorId,
+    author = author,
+    authorJob = authorJob,
+    authorAvatar = authorAvatar,
+    content = content,
+    published = published,
+    coordinates = coordinates,
+    link = link,
+    mentionIds = mentionIds,
+    mentionedMe = mentionedMe,
+    likeOwnerIds = likeOwnerIds,
+    likedByMe = likedByMe,
+    attachment = attachment,
+    users = users
+)
+
+fun List<Post>.toEntity(): List<PostEntity> = map(Post::toEntity)

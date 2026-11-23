@@ -127,6 +127,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/attachment_height"
                 android:paddingBottom="@dimen/common_spacing"
+                android:layout_marginTop="@dimen/common_spacing"
                 android:visibility="gone"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/speakers"

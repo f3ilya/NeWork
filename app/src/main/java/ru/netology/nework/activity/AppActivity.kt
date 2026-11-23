@@ -221,20 +221,13 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
 
     private fun hideBottomNavAndAvatar(bottomNav: BottomNavigationView) {
         binding.toolbarAvatar.isVisible = false
-        if (bottomNav.isVisible) {
-            bottomNav.animate()
-                .translationY(bottomNav.height.toFloat())
-                .alpha(0f)
-                .setDuration(300)
-                .withEndAction { bottomNav.isVisible = false }
-                .start()
-        }
         bottomNav.isVisible = false
     }
 
     private fun showBottomNavAndAvatar(bottomNav: BottomNavigationView) {
         binding.toolbarAvatar.isVisible = true
         if (!bottomNav.isVisible) {
+            bottomNav.animate().cancel()
             bottomNav.isVisible = true
             bottomNav.animate()
                 .translationY(0f)
@@ -242,5 +235,10 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                 .setDuration(300)
                 .start()
         }
+    }
+
+    override fun onDestroy() {
+        binding.bottomNavigation.animate().cancel()
+        super.onDestroy()
     }
 }

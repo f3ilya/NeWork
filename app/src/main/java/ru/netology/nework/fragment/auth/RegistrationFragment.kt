@@ -3,6 +3,7 @@ package ru.netology.nework.fragment.auth
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -101,6 +102,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
                 launch {
                     viewModel.state.collectLatest { state ->
+                        binding.loadingOverlay.isVisible = state.loading
                         state.errorType?.let { errorType ->
                             Snackbar.make(
                                 binding.root,

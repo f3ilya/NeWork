@@ -46,15 +46,6 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
-            binding.bottomNavigation.setPadding(0, 0, 0, systemBars.bottom)
-            binding.bottomNavigation.post {
-                val menuHeight = if (binding.bottomNavigation.isVisible) {
-                    binding.bottomNavigation.height
-                } else {
-                    0
-                }
-                binding.navHostFragment.setPadding(0, 0, 0, menuHeight)
-            }
             insets
         }
 
@@ -221,7 +212,9 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
 
     private fun hideBottomNavAndAvatar(bottomNav: BottomNavigationView) {
         binding.toolbarAvatar.isVisible = false
-        bottomNav.isVisible = false
+        if (bottomNav.isVisible) {
+            bottomNav.isVisible = false
+        }
     }
 
     private fun showBottomNavAndAvatar(bottomNav: BottomNavigationView) {
